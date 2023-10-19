@@ -1,10 +1,11 @@
 #![allow(unused)]
+use anyhow::Result;
 use serde::Deserialize;
 use serde_json::from_str;
 use std::collections::HashMap;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     let mvg_fib = "https://www.mvg.de/api/fib/v2";
     let mvg_zdm = "https://www.mvg.de/.rest/zdm/";
 
@@ -34,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn fetch_url(base_url: &str, url: &str) -> Result<(), Box<dyn std::error::Error>> {
+async fn fetch_url(base_url: &str, url: &str) -> Result<()> {
     let full_url = format!("{}{}", base_url, url);
 
     let resp = reqwest::get(full_url).await?.json::<Vec<String>>().await?;
@@ -52,10 +53,10 @@ struct StationInfo {
     place: String,
     post_code: String,
     street: String,
-    // type: String
+    r#type: String,
 }
 
-async fn fetch_station_info(url: &str, query: &str) -> Result<(), Box<dyn std::error::Error>> {
+async fn fetch_station_info(url: &str, query: &str) -> Result<()> {
     let full_url = format!("{}?query={}", url, query);
 
     let resp = reqwest::get(full_url)
