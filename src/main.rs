@@ -1,39 +1,121 @@
 #![allow(unused)]
-use anyhow::Result;
+use anyhow::Result; //to avoid writing the error type
 use serde::Deserialize;
-use serde_json::from_str;
-use std::collections::HashMap;
+
+use crossterm::{
+    event::{self, Event::Key, KeyCode::Char, KeyEventKind},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    ExecutableCommand,
+};
+use ratatui::{
+    prelude::{CrosstermBackend, Stylize, Terminal},
+    widgets::Paragraph,
+};
+
+use std::io::stderr;
+
+pub type Frame<'a> = ratatui::Frame<'a, CrosstermBackend<std::io::Stderr>>;
+
+struct App {
+    counter: i64,
+    should_quit: bool,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mvg_fib = "https://www.mvg.de/api/fib/v2";
-    let mvg_zdm = "https://www.mvg.de/.rest/zdm/";
+    startup()?;
 
-    const LOCATION_URL: &'static str = "/location";
+    let mut terminal = Terminal::new(CrosstermBackend::new(stderr()))?;
+    terminal.clear()?;
 
-    struct EndPoint {
-        url: &'static str,
-        args: Vec<&'static str>,
+    let mut app = App {
+        counter: 0,
+        should_quit: false,
+    };
+
+    loop {
+        // application render
+        terminal.draw(|f| {
+            ui(&app, f);
+        })?;
+
+        // application update
+        update(&mut app)?;
+
+        // application exit
+        if app.should_quit {
+            break;
+        }
     }
 
-    let location_endpoint = EndPoint {
-        url: LOCATION_URL,
-        args: vec!["query"],
-    };
+    shutdown()?;
 
-    let station_ids_endpoint = EndPoint {
-        url: "mvgStationGlobalIds",
-        args: vec![],
-    };
-
-    // let resp = fetch_url(mvg_zdm, station_ids_endpoint.url).await?;
-
-    let location_url = format!("{}{}", mvg_fib, LOCATION_URL);
-
-    let resp = fetch_station_info(&location_url, "de:09162:6").await?;
-    // println!("{:#?}", resp);
     Ok(())
 }
+
+fn startup() -> Result<()> {
+    stderr().execute(EnterAlternateScreen)?;
+    enable_raw_mode()?;
+    Ok(())
+}
+
+fn shutdown() -> Result<()> {
+    stderr().execute(LeaveAlternateScreen)?;
+    disable_raw_mode()?;
+    Ok(())
+}
+
+fn ui(app: &App, f: &mut Frame<'_>) {
+    f.render_widget(
+        Paragraph::new(format!("Counter: {}", app.counter))
+            .white()
+            .on_blue(),
+        f.size(),
+    );
+}
+
+fn update(app: &mut App) -> Result<()> {
+    if event::poll(std::time::Duration::from_millis(250))? {
+        if let Key(key) = event::read()? {
+            if key.kind == event::KeyEventKind::Press {
+                match key.code {
+                    Char('j') => app.counter += 1,
+                    Char('k') => app.counter -= 1,
+                    Char('q') => app.should_quit = true,
+                    _ => {}
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+// let mvg_fib = "https://www.mvg.de/api/fib/v2";
+// let mvg_zdm = "https://www.mvg.de/.rest/zdm/";
+
+// const LOCATION_URL: &'static str = "/location";
+
+// struct EndPoint {
+//     url: &'static str,
+//     args: Vec<&'static str>,
+// }
+
+// let location_endpoint = EndPoint {
+//     url: LOCATION_URL,
+//     args: vec!["query"],
+// };
+
+// let station_ids_endpoint = EndPoint {
+//     url: "mvgStationGlobalIds",
+//     args: vec![],
+// };
+
+// let resp = fetch_url(mvg_zdm, station_ids_endpoint.url).await?;
+
+// let location_url = format!("{}{}", mvg_fib, LOCATION_URL);
+
+// let resp = fetch_station_info(&location_url, "de:09162:6").await?;
+// println!("{:#?}", resp);
 
 async fn fetch_url(base_url: &str, url: &str) -> Result<()> {
     let full_url = format!("{}{}", base_url, url);
@@ -53,7 +135,7 @@ struct StationInfo {
     place: String,
     post_code: String,
     street: String,
-    r#type: String,
+    r#type: String, //type is a reserved keyword in Rust
 }
 
 async fn fetch_station_info(url: &str, query: &str) -> Result<()> {
