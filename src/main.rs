@@ -1,6 +1,4 @@
-#![allow(unused)]
 use anyhow::Result; //to avoid writing the error type
-use serde::Deserialize;
 
 use crossterm::{
     event::{self, Event::Key, KeyCode::Char, KeyEventKind},
@@ -8,21 +6,30 @@ use crossterm::{
     ExecutableCommand,
 };
 use ratatui::{
-    prelude::{Alignment, CrosstermBackend, Stylize, Terminal},
+    prelude::{
+        Alignment, Constraint, CrosstermBackend, Direction, Layout, Rect, Stylize, Terminal,
+    },
     style::{Color, Style},
-    widgets::{Block, BorderType, Borders, Paragraph},
+    text::{Line, Span},
+    widgets::{Block, BorderType, Borders, Clear, Gauge, List, ListItem, Paragraph},
 };
+// use tokio::{runtime::Handle, task};
 
 use std::io::stderr;
 
-mod components;
-use components::static_widgets;
+mod components; //to import the components module
+use components::static_widgets; // to avoid typing components::static_widgets:: every time
+mod api;
 
-pub type Frame<'a> = ratatui::Frame<'a, CrosstermBackend<std::io::Stderr>>;
+pub type Frame<'a> = ratatui::Frame<'a, CrosstermBackend<std::io::Stderr>>; // alias for the frame type
 
 struct App {
     counter: i64,
     should_quit: bool,
+    station_names: Vec<api::StationInfo>,
+    show_popup: bool,
+    progress: u16,
+    fetching: bool,
 }
 
 #[tokio::main]
@@ -30,25 +37,38 @@ async fn main() -> Result<()> {
     startup()?;
 
     let mut terminal = Terminal::new(CrosstermBackend::new(stderr()))?;
-    terminal.clear()?;
 
     let mut app = App {
         counter: 0,
         should_quit: false,
+        station_names: vec![],
+        show_popup: false,
+        progress: 0,
+        fetching: true,
     };
 
-    loop {
-        // application render
+    if app.fetching {
+        terminal.clear()?;
+        update_stations(&mut app).await;
+
         terminal.draw(|f| {
-            ui(&app, f);
+            draw_progress_bar(&app, f);
         })?;
+    } else {
+        terminal.clear()?;
+        loop {
+            // application render
+            terminal.draw(|f| {
+                ui(&app, f);
+            })?;
 
-        // application update
-        update(&mut app)?;
+            // application update
+            update(&mut app)?;
 
-        // application exit
-        if app.should_quit {
-            break;
+            // application exit
+            if app.should_quit {
+                break;
+            }
         }
     }
 
@@ -70,13 +90,59 @@ fn shutdown() -> Result<()> {
 }
 
 fn ui(app: &App, f: &mut Frame<'_>) {
-    return f.render_widget(
-        Paragraph::new(format!("Counter: {}", app.counter))
+    let paragraph = Paragraph::new(format!("Counter: {}", app.counter))
+        .block(static_widgets::get_app_border())
+        .style(Style::default().fg(Color::Yellow))
+        .alignment(Alignment::Center);
+
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3),
+            Constraint::Min(1),
+            Constraint::Length(3),
+        ])
+        .split(f.size());
+
+    f.render_widget(paragraph, chunks[0]);
+
+    if app.station_names.len() > 0 {
+        let station_name = Paragraph::new(format!("Name: {}", app.station_names[0].name))
             .block(static_widgets::get_app_border())
             .style(Style::default().fg(Color::Yellow))
-            .alignment(Alignment::Center),
-        f.size(),
+            .alignment(Alignment::Center);
+
+        // f.render_widget(station_name, chunks[1]);
+    }
+
+    f.render_widget(
+        Paragraph::new(format!("This is a line")).light_red(),
+        chunks[2],
     );
+
+    if app.show_popup {
+        let block = Block::default().title("Popup").borders(Borders::ALL).blue();
+        let area = static_widgets::centered_rect(60, 20, f.size());
+        f.render_widget(Clear, area); //this clears out the background
+        f.render_widget(block, area);
+    }
+}
+
+fn draw_progress_bar(app: &App, f: &mut Frame<'_>) {
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(100)])
+        .split(f.size());
+
+    render_gauge(app.progress, f, chunks[0]);
+}
+
+fn render_gauge(progress: u16, frame: &mut Frame, area: Rect) {
+    let gauge = Gauge::default()
+        .block(Block::default().title("Progress").borders(Borders::ALL))
+        .gauge_style(Style::new().light_red())
+        .percent(progress);
+    frame.render_widget(gauge, area);
 }
 
 fn update(app: &mut App) -> Result<()> {
@@ -87,6 +153,7 @@ fn update(app: &mut App) -> Result<()> {
                     Char('j') => app.counter += 1,
                     Char('k') => app.counter -= 1,
                     Char('q') => app.should_quit = true,
+                    Char('p') => app.show_popup = !app.show_popup,
                     _ => {}
                 }
             }
@@ -95,61 +162,39 @@ fn update(app: &mut App) -> Result<()> {
     return Ok(());
 }
 
-// let mvg_fib = "https://www.mvg.de/api/fib/v2";
-// let mvg_zdm = "https://www.mvg.de/.rest/zdm/";
+async fn update_stations(app: &mut App) {
+    if let Ok(station_ids) = api::fetch_station_ids().await {
+        println!("Fetched station ids {}", station_ids.len());
 
-// const LOCATION_URL: &'static str = "/location";
+        let mut counter = 0;
+        let station_count = station_ids.len();
 
-// struct EndPoint {
-//     url: &'static str,
-//     args: Vec<&'static str>,
-// }
+        for station_id in station_ids {
+            counter += 1;
+            match api::fetch_station_info(&station_id).await {
+                Ok(station_info) => {
+                    // println!("{:#?}", station_info);
+                    if station_info.len() > 0 && station_info[0].name.len() > 0 {
+                        app.station_names.push(station_info[0].clone())
+                        // continue;
+                    } else {
+                        // println!("No station info found for {}", station_id);
+                    }
+                }
+                Err(e) => {
+                    // println!("Error fetching station info for {}", e);
+                }
+            }
 
-// let location_endpoint = EndPoint {
-//     url: LOCATION_URL,
-//     args: vec!["query"],
-// };
+            let p = (counter / station_count) * 100;
+            println!("Progress: {}", p);
+            app.progress = p as u16;
 
-// let station_ids_endpoint = EndPoint {
-//     url: "mvgStationGlobalIds",
-//     args: vec![],
-// };
+            if counter == 10 {
+                break;
+            }
+        }
 
-// let resp = fetch_url(mvg_zdm, station_ids_endpoint.url).await?;
-
-// let location_url = format!("{}{}", mvg_fib, LOCATION_URL);
-
-// let resp = fetch_station_info(&location_url, "de:09162:6").await?;
-// println!("{:#?}", resp);
-
-async fn fetch_url(base_url: &str, url: &str) -> Result<()> {
-    let full_url = format!("{}{}", base_url, url);
-
-    let resp = reqwest::get(full_url).await?.json::<Vec<String>>().await?;
-    println!("{:#?}", resp);
-    return Ok(());
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")] //to avoid renaming all the fields to snake_case
-struct StationInfo {
-    house_number: String,
-    latitude: f32,
-    longitude: f32,
-    name: String,
-    place: String,
-    post_code: String,
-    street: String,
-    r#type: String, //type is a reserved keyword in Rust
-}
-
-async fn fetch_station_info(url: &str, query: &str) -> Result<()> {
-    let full_url = format!("{}?query={}", url, query);
-
-    let resp = reqwest::get(full_url)
-        .await?
-        .json::<Vec<StationInfo>>()
-        .await?;
-    println!("{:#?}", resp);
-    return Ok(());
+        app.fetching = false;
+    }
 }
