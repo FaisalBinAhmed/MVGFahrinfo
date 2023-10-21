@@ -8,8 +8,9 @@ use crossterm::{
     ExecutableCommand,
 };
 use ratatui::{
-    prelude::{CrosstermBackend, Stylize, Terminal},
-    widgets::Paragraph,
+    prelude::{Alignment, CrosstermBackend, Stylize, Terminal},
+    style::{Color, Style},
+    widgets::{Block, BorderType, Borders, Paragraph},
 };
 
 use std::io::stderr;
@@ -50,26 +51,33 @@ async fn main() -> Result<()> {
 
     shutdown()?;
 
-    Ok(())
+    return Ok(());
 }
 
 fn startup() -> Result<()> {
     stderr().execute(EnterAlternateScreen)?;
     enable_raw_mode()?;
-    Ok(())
+    return Ok(());
 }
 
 fn shutdown() -> Result<()> {
     stderr().execute(LeaveAlternateScreen)?;
     disable_raw_mode()?;
-    Ok(())
+    return Ok(());
 }
 
 fn ui(app: &App, f: &mut Frame<'_>) {
-    f.render_widget(
+    return f.render_widget(
         Paragraph::new(format!("Counter: {}", app.counter))
-            .white()
-            .on_blue(),
+            .block(
+                Block::default()
+                    .title("Counter App")
+                    .title_alignment(Alignment::Center)
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded),
+            )
+            .style(Style::default().fg(Color::Yellow))
+            .alignment(Alignment::Center),
         f.size(),
     );
 }
@@ -87,7 +95,7 @@ fn update(app: &mut App) -> Result<()> {
             }
         }
     }
-    Ok(())
+    return Ok(());
 }
 
 // let mvg_fib = "https://www.mvg.de/api/fib/v2";
@@ -122,7 +130,7 @@ async fn fetch_url(base_url: &str, url: &str) -> Result<()> {
 
     let resp = reqwest::get(full_url).await?.json::<Vec<String>>().await?;
     println!("{:#?}", resp);
-    Ok(())
+    return Ok(());
 }
 
 #[derive(Debug, Deserialize)]
@@ -146,5 +154,5 @@ async fn fetch_station_info(url: &str, query: &str) -> Result<()> {
         .json::<Vec<StationInfo>>()
         .await?;
     println!("{:#?}", resp);
-    Ok(())
+    return Ok(());
 }
