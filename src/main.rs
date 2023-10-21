@@ -15,6 +15,9 @@ use ratatui::{
 
 use std::io::stderr;
 
+mod components;
+use components::static_widgets;
+
 pub type Frame<'a> = ratatui::Frame<'a, CrosstermBackend<std::io::Stderr>>;
 
 struct App {
@@ -69,13 +72,7 @@ fn shutdown() -> Result<()> {
 fn ui(app: &App, f: &mut Frame<'_>) {
     return f.render_widget(
         Paragraph::new(format!("Counter: {}", app.counter))
-            .block(
-                Block::default()
-                    .title("Counter App")
-                    .title_alignment(Alignment::Center)
-                    .borders(Borders::ALL)
-                    .border_type(BorderType::Rounded),
-            )
+            .block(static_widgets::get_app_border())
             .style(Style::default().fg(Color::Yellow))
             .alignment(Alignment::Center),
         f.size(),
