@@ -101,7 +101,7 @@ pub async fn get_stations() -> Result<Vec<Station>> {
     let full_url = "https://www.mvg.de/.rest/zdm/stations";
 
     let resp = reqwest::get(full_url).await?.json::<Vec<Station>>().await?;
-    println!("{:#?}", resp[0]);
+    // println!("{:#?}", resp[0]);
     // return Ok(resp[0].clone());
     Ok(resp)
 }
