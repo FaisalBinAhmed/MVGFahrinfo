@@ -134,12 +134,17 @@ fn ui(app: &App, f: &mut Frame<'_>) {
             // .as_ref()
             // .unwrap() //TODO: handle result later
             .iter()
-            .map(|station| {
+            .enumerate()
+            .map(|(index, station)| {
                 ListItem::new(vec![
                     Line::from(vec![
                         Span::styled(
                             format!("{}", station.name),
-                            Style::default().fg(Color::Blue),
+                            Style::default().fg(if index == app.counter as usize {
+                                Color::Blue
+                            } else {
+                                Color::White
+                            }),
                         ),
                         Span::styled(
                             format!(" ({})", station.tariff_zones),
