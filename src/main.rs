@@ -3,7 +3,12 @@ use anyhow::Result; //to avoid writing the error type
 
 use api::get_departures;
 use crossterm::{
-    event::{self, Event::Key, KeyCode::Char, KeyEventKind},
+    event::{
+        self,
+        Event::Key,
+        KeyCode::{self, Char},
+        KeyEventKind,
+    },
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
@@ -209,6 +214,8 @@ fn update(app: &mut App) -> Result<()> {
                     Char('k') => app.counter -= 1,
                     Char('q') => app.should_quit = true,
                     Char('p') => app.show_popup = !app.show_popup,
+                    KeyCode::Down => app.counter += 1,
+                    KeyCode::Up => app.counter -= 1,
                     _ => {}
                 }
             }
@@ -221,7 +228,10 @@ fn get_product_icon_spans(products: &Vec<String>) -> Vec<Span> {
     let mut spans = vec![];
     for product in products {
         let icon = match product.as_str() {
-            "UBAHN" => Span::styled(" U ", Style::default().bg(Color::Blue).fg(Color::White)),
+            "UBAHN" => Span::styled(
+                " U ",
+                Style::default().bg(Color::Rgb(29, 43, 83)).fg(Color::White),
+            ),
             "BUS" => Span::styled("BUS", Style::default().bg(Color::DarkGray).fg(Color::White)),
             "TRAM" => Span::styled("Tram", Style::default().bg(Color::Red).fg(Color::White)),
             "SBAHN" => Span::styled(" S ", Style::default().bg(Color::Green).fg(Color::Black)),
