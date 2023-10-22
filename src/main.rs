@@ -1,5 +1,7 @@
+#[allow(unused, dead_code)]
 use anyhow::Result; //to avoid writing the error type
 
+use api::get_departures;
 use crossterm::{
     event::{self, Event::Key, KeyCode::Char, KeyEventKind},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
@@ -26,50 +28,65 @@ pub type Frame<'a> = ratatui::Frame<'a, CrosstermBackend<std::io::Stderr>>; // a
 struct App {
     counter: i64,
     should_quit: bool,
-    station_names: Vec<api::StationInfo>,
+    stations: Result<Vec<api::Station>>,
     show_popup: bool,
     progress: u16,
     fetching: bool,
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    startup()?;
-
-    let mut terminal = Terminal::new(CrosstermBackend::new(stderr()))?;
-    terminal.clear()?;
-
-    let mut app = App {
-        counter: 0,
-        should_quit: false,
-        station_names: vec![],
-        show_popup: false,
-        progress: 0,
-        fetching: true,
-    };
-
-    update_stations(&mut app).await;
-
-    loop {
-        if app.fetching {
-            terminal.draw(|f| {
-                draw_progress_bar(&app, f);
-            })?;
-        } else {
-            // application render
-            terminal.draw(|f| {
-                ui(&app, f);
-            })?;
-        }
-        // application update
-        update(&mut app)?;
-
-        // application exit
-        if app.should_quit {
-            break;
+impl App {
+    async fn new() -> Self {
+        Self {
+            counter: 0,
+            should_quit: false,
+            stations: api::get_stations().await,
+            show_popup: false,
+            progress: 0,
+            fetching: true,
         }
     }
-    shutdown()?;
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    // startup()?;
+
+    // let mut terminal = Terminal::new(CrosstermBackend::new(stderr()))?;
+    // terminal.clear()?;
+
+    let mut app = App::new().await;
+
+    if let stations = app.stations? {
+        println!("Stations: {:#?}", stations[0]);
+    }
+
+    // get_departures("de:09162:6").await?;
+
+    // tokio::spawn(async {
+    //     update_stations(&mut app).await;
+    // });
+    // update_stations(&mut app).await;
+
+    // loop {
+    //     if app.fetching {
+    //         terminal.draw(|f| {
+    //             draw_progress_bar(&app, f);
+    //         })?;
+    //     } else {
+    //         // application render
+    //         terminal.draw(|f| {
+    //             ui(&app, f);
+    //         })?;
+    //     }
+    //     // application update
+    //     update(&mut app)?;
+
+    //     // application exit
+    //     if app.should_quit {
+    //         break;
+    //     }
+    // }
+    // shutdown()?;
 
     return Ok(());
 }
@@ -169,7 +186,7 @@ async fn update_stations(app: &mut App) {
                     counter += 1;
                     // println!("{:#?}", station_info);
                     if station_info.len() > 0 && station_info[0].name.len() > 0 {
-                        app.station_names.push(station_info[0].clone())
+                        // app.stations.push(station_info[0].clone())
                         // continue;
                     } else {
                         // println!("No station info found for {}", station_id);
