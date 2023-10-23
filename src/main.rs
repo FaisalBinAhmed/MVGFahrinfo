@@ -230,11 +230,20 @@ fn get_product_icon_spans(products: &Vec<String>) -> Vec<Span> {
         let icon = match product.as_str() {
             "UBAHN" => Span::styled(
                 " U ",
-                Style::default().bg(Color::Rgb(29, 43, 83)).fg(Color::White),
+                Style::default()
+                    .bg(Color::Rgb(29, 43, 83))
+                    .fg(Color::White)
+                    .bold(),
             ),
             "BUS" => Span::styled("BUS", Style::default().bg(Color::DarkGray).fg(Color::White)),
             "TRAM" => Span::styled("Tram", Style::default().bg(Color::Red).fg(Color::White)),
-            "SBAHN" => Span::styled(" S ", Style::default().bg(Color::Green).fg(Color::Black)),
+            "SBAHN" => Span::styled(
+                " S ",
+                Style::default()
+                    .bg(Color::Rgb(84, 253, 84))
+                    .fg(Color::Black),
+            )
+            .bold(),
             // "REGIONAL_TRAIN" => "🚆",
             // "NIGHT_BUS" => "🚌",
             // "NIGHT_TRAIN" => "🚆",
