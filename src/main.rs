@@ -2,6 +2,7 @@
 use anyhow::Result; //to avoid writing the error type
 
 use api::get_departures;
+use chrono::Utc;
 use crossterm::{
     event::{
         self,
@@ -25,7 +26,7 @@ use ratatui::{
 use std::io::stderr;
 
 mod components; //to import the components module
-use components::static_widgets; // to avoid typing components::static_widgets:: every time
+use components::{static_widgets, station_list::display_departures}; // to avoid typing components::static_widgets:: every time
 mod api;
 
 pub type Frame<'a> = ratatui::Frame<'a, CrosstermBackend<std::io::Stderr>>; // alias for the frame type
@@ -117,10 +118,9 @@ impl App {
     }
 
     async fn select_station(&mut self) {
-        self.show_popup = !self.show_popup; //temp
-                                            // self.selected_station = Some(self.stations[self.counter as usize].clone());
-
+        self.selected_station = Some(self.stations[self.counter as usize].clone());
         self.update_departures().await;
+        self.show_popup = !self.show_popup; //temp
     }
 }
 
@@ -220,16 +220,18 @@ fn draw_popup(f: &mut Frame<'_>, app: &App) {
     //     .split(f.size());
 
     let block = Block::default().title("Popup").borders(Borders::ALL).blue();
-    let paragraph = Paragraph::new(format!(
-        "Selected station: {} ({})",
-        app.selected_station.as_ref().unwrap().name,
-        app.selected_station.as_ref().unwrap().tariff_zones
-    ))
-    .block(block);
+    // let paragraph = Paragraph::new(format!(
+    //     "Selected station: {} in ({} min)",
+    //     app.selected_station.as_ref().unwrap().name,
+    //     diff.num_minutes()
+    // ))
+    // .block(block);
+
+    let list = display_departures(&app.departures).block(block);
 
     let area = static_widgets::centered_rect(60, 20, f.size());
     f.render_widget(Clear, area); //this clears out the background
-    f.render_widget(paragraph, area);
+    f.render_widget(list, area);
 }
 
 async fn update(app: &mut App) -> Result<()> {

@@ -1,10 +1,11 @@
+use chrono::Utc;
 use ratatui::{
     style::{Color, Style},
     text::{Line, Span},
     widgets::{List, ListItem},
 };
 
-use crate::App;
+use crate::{api, App};
 
 pub fn get_station_list_widget(app: &App) -> List {
     return List::new(
@@ -94,4 +95,49 @@ fn get_product_icon_spans(products: &Vec<String>) -> Vec<Span> {
         spans.push(Span::raw(" ")); // add a space between the icons
     }
     return spans;
+}
+
+pub fn display_departures(departures: &Vec<api::DepartureInfo>) -> List {
+    return List::new(
+        departures
+            .iter()
+            .enumerate()
+            .map(|(index, departure)| {
+                ListItem::new(vec![
+                    Line::from(vec![
+                        Span::styled(
+                            format!("{}", departure.label),
+                            // Style::default().fg(if index == app.counter as usize {
+                            //     Color::Blue
+                            // } else {
+                            //     Color::White
+                            // }),
+                            Style::default().fg(Color::Blue),
+                        ),
+                        Span::styled(
+                            format!(" ({})", departure.destination),
+                            Style::default().fg(Color::LightCyan),
+                        ),
+                        Span::styled(
+                            format!(
+                                " ({})",
+                                get_minutes(departure.realtime_departure_time.clone())
+                            ),
+                            Style::default().fg(Color::LightYellow),
+                        ),
+                    ]),
+                    // Line::from(get_product_icon_spans(&station.products)),
+                ])
+            })
+            .collect::<Vec<ListItem>>(),
+    );
+}
+
+fn get_minutes(time: i64) -> i64 {
+    let now = Utc::now();
+    let timestamp_in_seconds = time / 1000;
+    let future_time = chrono::DateTime::from_timestamp(timestamp_in_seconds, 0).unwrap();
+    let diff = now.signed_duration_since(future_time);
+
+    return diff.num_minutes();
 }
