@@ -18,7 +18,7 @@ use ratatui::{
     },
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Clear, Gauge, List, ListItem, Paragraph},
+    widgets::{Block, BorderType, Borders, Clear, Gauge, List, ListItem, ListState, Paragraph},
 };
 // use tokio::{runtime::Handle, task};
 
@@ -30,10 +30,52 @@ mod api;
 
 pub type Frame<'a> = ratatui::Frame<'a, CrosstermBackend<std::io::Stderr>>; // alias for the frame type
 
-struct App {
+struct StatefulList {
+    state: ListState,
+    items: Vec<api::Station>,
+}
+
+impl StatefulList {
+    async fn new() -> Self {
+        Self {
+            state: ListState::default(),
+            items: api::get_stations().await.unwrap_or_else(|_| vec![]),
+        }
+    }
+    fn next(&mut self) {
+        let i = match self.state.selected() {
+            Some(i) => {
+                if i >= self.items.len() - 1 {
+                    0
+                } else {
+                    i + 1
+                }
+            }
+            None => 0,
+        };
+        self.state.select(Some(i));
+    }
+
+    fn previous(&mut self) {
+        let i = match self.state.selected() {
+            Some(i) => {
+                if i == 0 {
+                    self.items.len() - 1
+                } else {
+                    i - 1
+                }
+            }
+            None => 0,
+        };
+        self.state.select(Some(i));
+    }
+}
+
+pub struct App {
     counter: i64,
     should_quit: bool,
     stations: Vec<api::Station>,
+    // station_list: StatefulList,
     show_popup: bool,
     progress: u16,
     fetching: bool,
@@ -47,6 +89,7 @@ impl App {
             counter: 0,
             should_quit: false,
             stations: api::get_stations().await.unwrap_or_else(|_| vec![]),
+            // station_list: StatefulList::new().await,
             show_popup: false,
             progress: 0,
             fetching: true,
@@ -75,7 +118,7 @@ impl App {
 
     async fn select_station(&mut self) {
         self.show_popup = !self.show_popup; //temp
-        self.selected_station = Some(self.stations[self.counter as usize].clone());
+                                            // self.selected_station = Some(self.stations[self.counter as usize].clone());
 
         self.update_departures().await;
     }
@@ -149,55 +192,7 @@ fn ui(app: &App, f: &mut Frame<'_>) {
 
     f.render_widget(paragraph, chunks[0]);
 
-    let itemlist = List::new(
-        app.stations
-            // .as_ref()
-            // .unwrap() //TODO: handle result later
-            .iter()
-            .enumerate()
-            .map(|(index, station)| {
-                ListItem::new(vec![
-                    Line::from(vec![
-                        Span::styled(
-                            format!("{}", station.name),
-                            Style::default().fg(if index == app.counter as usize {
-                                Color::Blue
-                            } else {
-                                Color::White
-                            }),
-                        ),
-                        Span::styled(
-                            format!(" ({})", station.tariff_zones),
-                            Style::default().fg(Color::LightCyan),
-                        ),
-                        Span::styled(
-                            if index == app.counter as usize {
-                                format!(" <<",)
-                            } else {
-                                format!("  ")
-                            },
-                            Style::default().fg(Color::LightYellow),
-                        ),
-                    ]),
-                    // Line::from(vec![
-                    // Span::styled(
-                    //     format!("ID: {}", station.id),
-                    //     Style::default().fg(Color::Blue),
-                    // ),
-                    // get_product_icon_spans(&station.products),
-                    // Span::styled(
-                    //     format!(
-                    //         " ({})",
-                    //         station.abbreviation.as_ref().unwrap_or(&"".to_string())
-                    //     ),
-                    //     Style::default().fg(Color::DarkGray),
-                    // ),
-                    // ]),
-                    Line::from(get_product_icon_spans(&station.products)),
-                ])
-            })
-            .collect::<Vec<ListItem>>(),
-    );
+    let itemlist = components::station_list::get_station_list_widget(app);
 
     f.render_widget(itemlist, chunks[1]);
 
@@ -253,47 +248,6 @@ async fn update(app: &mut App) -> Result<()> {
         }
     }
     return Ok(());
-}
-
-fn get_product_icon_spans(products: &Vec<String>) -> Vec<Span> {
-    let mut spans = vec![];
-    for product in products {
-        let icon = match product.as_str() {
-            "UBAHN" => Span::styled(
-                " U ",
-                Style::default()
-                    .bg(Color::Rgb(29, 43, 83))
-                    .fg(Color::White)
-                    .bold(),
-            ),
-            "BUS" => Span::styled(
-                " BUS ",
-                Style::default()
-                    .bg(Color::Rgb(17, 93, 111))
-                    .fg(Color::White),
-            ),
-            "TRAM" => Span::styled(
-                " Tram ",
-                Style::default()
-                    .bg(Color::Rgb(231, 27, 30))
-                    .fg(Color::White),
-            ),
-            "SBAHN" => Span::styled(
-                " S ",
-                Style::default()
-                    .bg(Color::Rgb(84, 253, 84))
-                    .fg(Color::Black),
-            )
-            .bold(),
-            _ => Span::styled(
-                product,
-                Style::default().bg(Color::LightYellow).fg(Color::Black),
-            ),
-        };
-        spans.push(icon);
-        spans.push(Span::raw(" ")); // add a space between the icons
-    }
-    return spans;
 }
 
 // async fn update_stations(app: &mut App) {
