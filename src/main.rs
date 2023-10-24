@@ -50,6 +50,18 @@ impl App {
             fetching: true,
         }
     }
+    fn quit(&mut self) {
+        self.should_quit = true;
+    }
+    fn increment_station(&mut self) {
+        self.counter += 1;
+    }
+
+    fn decrement_station(&mut self) {
+        if self.counter > 0 {
+            self.counter -= 1;
+        }
+    }
 }
 
 #[tokio::main]
@@ -73,12 +85,6 @@ async fn main() -> Result<()> {
     // update_stations(&mut app).await;
 
     loop {
-        // if app.fetching {
-        //     terminal.draw(|f| {
-        //         draw_progress_bar(&app, f);
-        //     })?;
-        // } else {
-        // }
         // application render
         terminal.draw(|f| {
             ui(&app, f);
@@ -125,15 +131,6 @@ fn ui(app: &App, f: &mut Frame<'_>) {
 
     f.render_widget(paragraph, chunks[0]);
 
-    // if app.station_names.len() > 0 {
-    //     let station_name = Paragraph::new(format!("Name: {}", app.station_names[0].name))
-    //         .block(static_widgets::get_app_border())
-    //         .style(Style::default().fg(Color::Yellow))
-    //         .alignment(Alignment::Center);
-
-    //     // f.render_widget(station_name, chunks[1]);
-    // }
-
     let itemlist = List::new(
         app.stations
             // .as_ref()
@@ -179,43 +176,34 @@ fn ui(app: &App, f: &mut Frame<'_>) {
     f.render_widget(itemlist, chunks[1]);
 
     f.render_widget(
-        Paragraph::new(format!("This is a line")).light_red(),
+        Paragraph::new(format!("Press p to select station, q to quit app"))
+            .light_red()
+            .block(Block::default().borders(Borders::TOP))
+            .alignment(Alignment::Center),
         chunks[2],
     );
 
     if app.show_popup {
-        let block = Block::default().title("Popup").borders(Borders::ALL).blue();
-        let area = static_widgets::centered_rect(60, 20, f.size());
-        f.render_widget(Clear, area); //this clears out the background
-        f.render_widget(block, area);
+        draw_popup(f)
     }
-
-    // if app.fetching {
-    //     draw_progress_bar(app, f)
-    // }
 }
 
-// fn draw_progress_bar(app: &App, f: &mut Frame<'_>) {
-//     let area = f.size();
-//     // println!("Progress: {}", app.progress);
-//     let gauge = Gauge::default()
-//         // .block(Block::default().title("Progress").borders(Borders::ALL))
-//         .gauge_style(Style::new().light_red())
-//         .percent(app.progress);
-//     f.render_widget(gauge, area);
-// }
+fn draw_popup(f: &mut Frame<'_>) {
+    let block = Block::default().title("Popup").borders(Borders::ALL).blue();
+    let area = static_widgets::centered_rect(60, 20, f.size());
+    f.render_widget(Clear, area); //this clears out the background
+    f.render_widget(block, area);
+}
 
 fn update(app: &mut App) -> Result<()> {
     if event::poll(std::time::Duration::from_millis(250))? {
         if let Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Press {
                 match key.code {
-                    Char('j') => app.counter += 1,
-                    Char('k') => app.counter -= 1,
-                    Char('q') => app.should_quit = true,
+                    Char('q') => app.quit(),
                     Char('p') => app.show_popup = !app.show_popup,
-                    KeyCode::Down => app.counter += 1,
-                    KeyCode::Up => app.counter -= 1,
+                    KeyCode::Down => app.increment_station(),
+                    KeyCode::Up => app.decrement_station(),
                     _ => {}
                 }
             }
@@ -235,8 +223,18 @@ fn get_product_icon_spans(products: &Vec<String>) -> Vec<Span> {
                     .fg(Color::White)
                     .bold(),
             ),
-            "BUS" => Span::styled("BUS", Style::default().bg(Color::DarkGray).fg(Color::White)),
-            "TRAM" => Span::styled("Tram", Style::default().bg(Color::Red).fg(Color::White)),
+            "BUS" => Span::styled(
+                " BUS ",
+                Style::default()
+                    .bg(Color::Rgb(17, 93, 111))
+                    .fg(Color::White),
+            ),
+            "TRAM" => Span::styled(
+                " Tram ",
+                Style::default()
+                    .bg(Color::Rgb(231, 27, 30))
+                    .fg(Color::White),
+            ),
             "SBAHN" => Span::styled(
                 " S ",
                 Style::default()
@@ -244,10 +242,10 @@ fn get_product_icon_spans(products: &Vec<String>) -> Vec<Span> {
                     .fg(Color::Black),
             )
             .bold(),
-            // "REGIONAL_TRAIN" => "🚆",
-            // "NIGHT_BUS" => "🚌",
-            // "NIGHT_TRAIN" => "🚆",
-            _ => Span::styled(product, Style::default().bg(Color::LightRed)),
+            _ => Span::styled(
+                product,
+                Style::default().bg(Color::LightYellow).fg(Color::Black),
+            ),
         };
         spans.push(icon);
         spans.push(Span::raw(" ")); // add a space between the icons
