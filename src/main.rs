@@ -168,7 +168,15 @@ fn ui(app: &App, f: &mut Frame<'_>) {
                         ),
                         Span::styled(
                             format!(" ({})", station.tariff_zones),
-                            Style::default().fg(Color::LightRed),
+                            Style::default().fg(Color::LightCyan),
+                        ),
+                        Span::styled(
+                            if index == app.counter as usize {
+                                format!(" <<",)
+                            } else {
+                                format!("  ")
+                            },
+                            Style::default().fg(Color::LightYellow),
                         ),
                     ]),
                     // Line::from(vec![
