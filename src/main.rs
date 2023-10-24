@@ -37,6 +37,8 @@ struct App {
     show_popup: bool,
     progress: u16,
     fetching: bool,
+    selected_station: Option<api::Station>,
+    departures: Vec<api::DepartureInfo>,
 }
 
 impl App {
@@ -48,6 +50,8 @@ impl App {
             show_popup: false,
             progress: 0,
             fetching: true,
+            selected_station: None,
+            departures: vec![],
         }
     }
     fn quit(&mut self) {
@@ -62,10 +66,24 @@ impl App {
             self.counter -= 1;
         }
     }
+
+    async fn update_departures(&mut self) {
+        if let Some(station) = &self.selected_station {
+            self.departures = get_departures(&station.id).await.unwrap_or_else(|_| vec![]);
+        }
+    }
+
+    async fn select_station(&mut self) {
+        self.show_popup = !self.show_popup; //temp
+        self.selected_station = Some(self.stations[self.counter as usize].clone());
+
+        self.update_departures().await;
+    }
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // initialize_panic_handler();
     startup()?;
 
     let mut terminal = Terminal::new(CrosstermBackend::new(stderr()))?;
@@ -90,7 +108,7 @@ async fn main() -> Result<()> {
             ui(&app, f);
         })?;
         // application update
-        update(&mut app)?;
+        update(&mut app).await?;
 
         // application exit
         if app.should_quit {
@@ -184,18 +202,34 @@ fn ui(app: &App, f: &mut Frame<'_>) {
     );
 
     if app.show_popup {
-        draw_popup(f)
+        draw_popup(f, app)
     }
 }
 
-fn draw_popup(f: &mut Frame<'_>) {
+fn draw_popup(f: &mut Frame<'_>, app: &App) {
+    // let popup_layout = Layout::default()
+    //     .direction(Direction::Vertical)
+    //     .constraints([
+    //         Constraint::Percentage(10),
+    //         Constraint::Percentage(80),
+    //         Constraint::Percentage(10),
+    //     ])
+    //     .split(f.size());
+
     let block = Block::default().title("Popup").borders(Borders::ALL).blue();
+    let paragraph = Paragraph::new(format!(
+        "Selected station: {} ({})",
+        app.selected_station.as_ref().unwrap().name,
+        app.selected_station.as_ref().unwrap().tariff_zones
+    ))
+    .block(block);
+
     let area = static_widgets::centered_rect(60, 20, f.size());
     f.render_widget(Clear, area); //this clears out the background
-    f.render_widget(block, area);
+    f.render_widget(paragraph, area);
 }
 
-fn update(app: &mut App) -> Result<()> {
+async fn update(app: &mut App) -> Result<()> {
     if event::poll(std::time::Duration::from_millis(250))? {
         if let Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Press {
@@ -204,6 +238,7 @@ fn update(app: &mut App) -> Result<()> {
                     Char('p') => app.show_popup = !app.show_popup,
                     KeyCode::Down => app.increment_station(),
                     KeyCode::Up => app.decrement_station(),
+                    KeyCode::Enter => app.select_station().await,
                     _ => {}
                 }
             }
@@ -289,3 +324,12 @@ fn get_product_icon_spans(products: &Vec<String>) -> Vec<Span> {
 //         }
 //     }
 // }
+
+pub fn initialize_panic_handler() {
+    let original_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic_info| {
+        crossterm::execute!(std::io::stderr(), crossterm::terminal::LeaveAlternateScreen).unwrap();
+        crossterm::terminal::disable_raw_mode().unwrap();
+        original_hook(panic_info);
+    }));
+}

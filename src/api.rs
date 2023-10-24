@@ -63,7 +63,7 @@ pub async fn get_departures(id: &str) -> Result<Vec<DepartureInfo>> {
         .await?
         .json::<Vec<DepartureInfo>>()
         .await?;
-    println!("{:#?}", resp[0]);
+    // println!("{:#?}", resp[0]);
     // return Ok(resp[0].clone());
     Ok(resp)
 }
