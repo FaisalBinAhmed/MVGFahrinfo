@@ -84,6 +84,7 @@ pub struct App {
     departures: Vec<api::DepartureInfo>,
 }
 
+
 impl App {
     async fn new() -> Self {
         Self {
@@ -232,7 +233,7 @@ fn draw_popup(f: &mut Frame<'_>, app: &App) {
 
     let list = display_departures(&app.departures).block(block);
 
-    let area = static_widgets::centered_rect(60, 20, f.size());
+    let area = static_widgets::centered_rect(60, 40, f.size());
     f.render_widget(Clear, area); //this clears out the background
     f.render_widget(list, area);
 }
