@@ -107,23 +107,18 @@ pub fn display_departures(departures: &Vec<api::DepartureInfo>) -> List {
                     Line::from(vec![
                         Span::styled(
                             format!("{}", departure.label),
-                            // Style::default().fg(if index == app.counter as usize {
-                            //     Color::Blue
-                            // } else {
-                            //     Color::White
-                            // }),
                             Style::default().fg(Color::Blue),
                         ),
                         Span::styled(
-                            format!(" ({})", departure.destination),
+                            format!(" {}", departure.destination),
                             Style::default().fg(Color::LightCyan),
                         ),
                         Span::styled(
                             format!(
-                                " ({})",
+                                " ({}) min",
                                 get_minutes(departure.realtime_departure_time.clone())
                             ),
-                            Style::default().fg(Color::LightYellow),
+                            Style::default().fg(Color::White),
                         ),
                     ]),
                     // Line::from(get_product_icon_spans(&station.products)),

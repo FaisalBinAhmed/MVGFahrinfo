@@ -219,7 +219,10 @@ fn draw_popup(f: &mut Frame<'_>, app: &App) {
     //     ])
     //     .split(f.size());
 
-    let block = Block::default().title("Popup").borders(Borders::ALL).blue();
+    let block = Block::default()
+        .title(format!("{}", &app.selected_station.as_ref().unwrap().name))
+        .borders(Borders::ALL)
+        .blue();
     // let paragraph = Paragraph::new(format!(
     //     "Selected station: {} in ({} min)",
     //     app.selected_station.as_ref().unwrap().name,
