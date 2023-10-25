@@ -132,7 +132,7 @@ fn get_minutes(time: i64) -> i64 {
     let now = Utc::now();
     let timestamp_in_seconds = time / 1000;
     let future_time = chrono::DateTime::from_timestamp(timestamp_in_seconds, 0).unwrap();
-    let diff = now.signed_duration_since(future_time);
+    let diff = future_time.signed_duration_since(now); //now.signed_duration_since(future_time);
 
     return diff.num_minutes();
 }
