@@ -85,21 +85,40 @@ pub struct App {
 }
 
 pub struct Deprtures {
-    current_station: api::Station,
+    current_station_id: String,
     departures: Vec<api::DepartureInfo>,
     is_loading: bool,
 }
 
 
-// impl Deprtures {
-//     async fn new(station: api::Station) -> Self {
-//         Self {
-//             current_station: station,
-//             departures: get_departures(&station.id).await.unwrap_or_else(|_| vec![]),
-//             is_loading: false,
-//         }
-//     }
-// }
+impl Deprtures {
+    fn new() -> Self {
+        Self {
+            current_station_id: String::from(""),
+            departures: vec![],
+            is_loading: false,
+        }
+    }
+}
+
+async fn refresh_departures(departures: &mut Deprtures, app: &App) {
+    
+    loop {
+        departures.is_loading = true;
+        let current_station_id: &str = match &app.selected_station {
+            Some(station) => station.id.as_str(),
+            None => "",
+        };
+
+        departures.departures = get_departures(current_station_id).await.unwrap_or_else(|_| vec![]);
+        //wait a minute
+        departures.is_loading = false;
+        tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+    }
+
+}
+
+
 
 
 impl App {
@@ -151,6 +170,13 @@ async fn main() -> Result<()> {
     terminal.clear()?;
 
     let mut app = App::new().await;
+
+    // let mut departures = Deprtures::new();
+    
+    // refresh_departures(&mut departures, &app).await;
+    
+
+    println!("current_station_id: {:#?}", app.stations[0]);
 
     // if let stations = app.stations? {
     //     println!("Stations: {:#?}", stations[0]);
