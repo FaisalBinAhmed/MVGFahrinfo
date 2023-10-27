@@ -84,6 +84,23 @@ pub struct App {
     departures: Vec<api::DepartureInfo>,
 }
 
+pub struct Deprtures {
+    current_station: api::Station,
+    departures: Vec<api::DepartureInfo>,
+    is_loading: bool,
+}
+
+
+// impl Deprtures {
+//     async fn new(station: api::Station) -> Self {
+//         Self {
+//             current_station: station,
+//             departures: get_departures(&station.id).await.unwrap_or_else(|_| vec![]),
+//             is_loading: false,
+//         }
+//     }
+// }
+
 
 impl App {
     async fn new() -> Self {
@@ -220,8 +237,13 @@ fn draw_popup(f: &mut Frame<'_>, app: &App) {
     //     ])
     //     .split(f.size());
 
+    let popup_title = match &app.selected_station {
+        Some(station) => format!("{}", station.name),
+        None => "Unknown Station".to_string(),
+    };
+
     let block = Block::default()
-        .title(format!("{}", &app.selected_station.as_ref().unwrap().name))
+        .title(popup_title)
         .borders(Borders::ALL)
         .blue();
     // let paragraph = Paragraph::new(format!(
