@@ -167,16 +167,16 @@ async fn main() -> Result<()> {
     startup()?;
 
     let mut terminal = Terminal::new(CrosstermBackend::new(stderr()))?;
-    terminal.clear()?;
-
+    println!("initializing app...");
+    println!("fetching stations...");
     let mut app = App::new().await;
-
+    terminal.clear()?;
     // let mut departures = Deprtures::new();
     
     // refresh_departures(&mut departures, &app).await;
     
 
-    println!("current_station_id: {:#?}", app.stations[0]);
+    // println!("current_station_id: {:#?}", app.stations[0]);
 
     // if let stations = app.stations? {
     //     println!("Stations: {:#?}", stations[0]);
