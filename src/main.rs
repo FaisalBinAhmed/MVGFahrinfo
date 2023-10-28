@@ -2,24 +2,21 @@
 use anyhow::Result; //to avoid writing the error type
 
 use api::get_departures;
-use chrono::Utc;
 use crossterm::{
     event::{
         self,
         Event::Key,
         KeyCode::{self, Char},
-        KeyEventKind,
     },
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
 use ratatui::{
     prelude::{
-        Alignment, Constraint, CrosstermBackend, Direction, Layout, Rect, Stylize, Terminal,
+        Alignment, Constraint, CrosstermBackend, Direction, Layout, Stylize, Terminal,
     },
     style::{Color, Style},
-    text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Clear, Gauge, List, ListItem, ListState, Paragraph},
+    widgets::{Block, Clear, ListState, Paragraph, Borders},
 };
 // use tokio::{runtime::Handle, task};
 
@@ -182,12 +179,6 @@ async fn main() -> Result<()> {
     //     println!("Stations: {:#?}", stations[0]);
     // }
 
-    // get_departures("de:09162:6").await?;
-
-    // tokio::spawn(async {
-    //     update_stations(&mut app).await;
-    // });
-    // update_stations(&mut app).await;
 
     loop {
         // application render
