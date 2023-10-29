@@ -12,11 +12,10 @@ use crossterm::{
     ExecutableCommand,
 };
 use ratatui::{
-    prelude::{
-        Alignment, Constraint, CrosstermBackend, Direction, Layout, Stylize, Terminal,
-    },
+    prelude::{Alignment, Constraint, CrosstermBackend, Direction, Layout, Stylize, Terminal},
     style::{Color, Style},
-    widgets::{Block, Clear, ListState, Paragraph, Borders},
+    text::{Line, Span},
+    widgets::{Block, Borders, Clear, ListState, Paragraph, Tabs},
 };
 // use tokio::{runtime::Handle, task};
 
@@ -69,14 +68,18 @@ impl StatefulList {
     }
 }
 
+enum AppTabs {
+    HomeTab,
+    StationTab,
+}
 pub struct App {
+    selected_tab: AppTabs,
     counter: i64,
     should_quit: bool,
     stations: Vec<api::Station>,
     // station_list: StatefulList,
     show_popup: bool,
-    progress: u16,
-    fetching: bool,
+
     selected_station: Option<api::Station>,
     departures: Vec<api::DepartureInfo>,
     should_redraw: bool,
@@ -87,7 +90,6 @@ pub struct Deprtures {
     departures: Vec<api::DepartureInfo>,
     is_loading: bool,
 }
-
 
 impl Deprtures {
     fn new() -> Self {
@@ -100,7 +102,6 @@ impl Deprtures {
 }
 
 async fn refresh_departures(departures: &mut Deprtures, app: &App) {
-    
     loop {
         departures.is_loading = true;
         let current_station_id: &str = match &app.selected_station {
@@ -108,27 +109,24 @@ async fn refresh_departures(departures: &mut Deprtures, app: &App) {
             None => "",
         };
 
-        departures.departures = get_departures(current_station_id).await.unwrap_or_else(|_| vec![]);
+        departures.departures = get_departures(current_station_id)
+            .await
+            .unwrap_or_else(|_| vec![]);
         //wait a minute
         departures.is_loading = false;
         tokio::time::sleep(std::time::Duration::from_secs(60)).await;
     }
-
 }
-
-
-
 
 impl App {
     async fn new() -> Self {
         Self {
+            selected_tab: AppTabs::HomeTab,
             counter: 0,
             should_quit: false,
             stations: api::get_stations().await.unwrap_or_else(|_| vec![]),
             // station_list: StatefulList::new().await,
             show_popup: false,
-            progress: 0,
-            fetching: true,
             selected_station: None,
             departures: vec![],
             should_redraw: true,
@@ -144,6 +142,12 @@ impl App {
     fn decrement_station(&mut self) {
         if self.counter > 0 {
             self.counter -= 1;
+        }
+    }
+    fn toggle_tabs(&mut self) {
+        match self.selected_tab {
+            AppTabs::HomeTab => self.selected_tab = AppTabs::StationTab,
+            AppTabs::StationTab => self.selected_tab = AppTabs::HomeTab,
         }
     }
 
@@ -171,9 +175,8 @@ async fn main() -> Result<()> {
     let mut app = App::new().await;
     terminal.clear()?;
     // let mut departures = Deprtures::new();
-    
+
     // refresh_departures(&mut departures, &app).await;
-    
 
     // println!("current_station_id: {:#?}", app.stations[0]);
 
@@ -181,13 +184,11 @@ async fn main() -> Result<()> {
     //     println!("Stations: {:#?}", stations[0]);
     // }
 
-
     loop {
         // application render
 
-        if app.should_redraw{
-            
-            terminal.draw(|f| {                                                                             
+        if app.should_redraw {
+            terminal.draw(|f| {
                 ui(&app, f);
             })?;
             app.should_redraw = false;
@@ -219,37 +220,63 @@ fn shutdown() -> Result<()> {
 }
 
 fn ui(app: &App, f: &mut Frame<'_>) {
-    let paragraph = Paragraph::new(format!("Counter: {}", app.counter))
-        .block(static_widgets::get_app_border())
-        .style(Style::default().fg(Color::Yellow))
-        .alignment(Alignment::Center);
+    // let paragraph = Paragraph::new(format!("Counter: {}", app.counter))
+    //     .block(static_widgets::get_app_border())
+    //     .style(Style::default().fg(Color::Yellow))
+    //     .alignment(Alignment::Center);
 
+    let size = f.size();
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(3),
-            Constraint::Min(1),
-            Constraint::Length(3),
-        ])
-        .split(f.size());
+        .constraints([Constraint::Length(3), Constraint::Min(0)])
+        .split(size);
 
-    f.render_widget(paragraph, chunks[0]);
+    let block = Block::default();
+    f.render_widget(block, size);
+
+    let tab_names = vec!["Home", "Station"];
+    let titles = tab_names
+        .iter()
+        .map(|t| {
+            Line::from(Span::styled(
+                format!("{}", t),
+                Style::default().fg(Color::LightCyan),
+            ))
+        })
+        .collect();
+
+    let index: usize = match app.selected_tab {
+        AppTabs::HomeTab => 0,
+        AppTabs::StationTab => 1,
+    };
 
     let itemlist = components::station_list::get_station_list_widget(app);
 
-    f.render_widget(itemlist, chunks[1]);
+    let tabs = Tabs::new(titles)
+        .block(Block::default().borders(Borders::ALL).title("Tabs"))
+        .select(index)
+        .style(Style::default())
+        .highlight_style(Style::default().bold());
 
-    f.render_widget(
-        Paragraph::new(format!("Press p to select station, q to quit app"))
-            .light_red()
-            .block(Block::default().borders(Borders::TOP))
-            .alignment(Alignment::Center),
-        chunks[2],
-    );
+    f.render_widget(tabs, chunks[0]);
+    match app.selected_tab {
+        AppTabs::HomeTab => draw_popup(f, app),
+        AppTabs::StationTab => f.render_widget(itemlist, chunks[1]),
+    };
 
-    if app.show_popup {
-        draw_popup(f, app)
-    }
+    // f.render_widget(itemlist, chunks[1]);
+
+    // f.render_widget(
+    //     Paragraph::new(format!("Press p to toggle departures, enter to select station, q to quit app"))
+    //         .light_red()
+    //         .block(Block::default().borders(Borders::TOP))
+    //         .alignment(Alignment::Center),
+    //     chunks[2],
+    // );
+
+    // if app.show_popup {
+    //     draw_popup(f, app)
+    // }
 }
 
 fn draw_popup(f: &mut Frame<'_>, app: &App) {
@@ -272,7 +299,6 @@ fn draw_popup(f: &mut Frame<'_>, app: &App) {
         .borders(Borders::ALL)
         .blue();
 
-
     let list = display_departures(&app.departures).block(block);
 
     let area = static_widgets::centered_rect(60, 40, f.size());
@@ -286,10 +312,26 @@ async fn update(app: &mut App) -> Result<()> {
             if key.kind == event::KeyEventKind::Press {
                 match key.code {
                     Char('q') => app.quit(),
-                    Char('p') => {app.show_popup = !app.show_popup; app.should_redraw = true;},
-                    KeyCode::Down => {app.increment_station(); app.should_redraw = true;},
-                    KeyCode::Up => {app.decrement_station(); app.should_redraw = true;},
-                    KeyCode::Enter => {app.select_station().await; app.should_redraw = true;},
+                    Char('p') => {
+                        app.show_popup = !app.show_popup;
+                        app.should_redraw = true;
+                    }
+                    KeyCode::Down => {
+                        app.increment_station();
+                        app.should_redraw = true;
+                    }
+                    KeyCode::Up => {
+                        app.decrement_station();
+                        app.should_redraw = true;
+                    }
+                    KeyCode::Enter => {
+                        app.select_station().await;
+                        app.should_redraw = true;
+                    }
+                    KeyCode::Tab => {
+                        app.toggle_tabs();
+                        app.should_redraw = true;
+                    }
                     _ => {}
                 }
             }
