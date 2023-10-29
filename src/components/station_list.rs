@@ -10,8 +10,6 @@ use crate::{api, App};
 pub fn get_station_list_widget(app: &App) -> List {
     return List::new(
         app.stations
-            // .as_ref()
-            // .unwrap() //TODO: handle result later
             .iter()
             .enumerate()
             .map(|(index, station)| {
@@ -38,20 +36,6 @@ pub fn get_station_list_widget(app: &App) -> List {
                             Style::default().fg(Color::LightYellow),
                         ),
                     ]),
-                    // Line::from(vec![
-                    // Span::styled(
-                    //     format!("ID: {}", station.id),
-                    //     Style::default().fg(Color::Blue),
-                    // ),
-                    // get_product_icon_spans(&station.products),
-                    // Span::styled(
-                    //     format!(
-                    //         " ({})",
-                    //         station.abbreviation.as_ref().unwrap_or(&"".to_string())
-                    //     ),
-                    //     Style::default().fg(Color::DarkGray),
-                    // ),
-                    // ]),
                     Line::from(get_product_icon_spans(&station.products)),
                 ])
             })

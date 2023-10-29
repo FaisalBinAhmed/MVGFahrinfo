@@ -12,10 +12,10 @@ use crossterm::{
     ExecutableCommand,
 };
 use ratatui::{
-    prelude::{Alignment, Constraint, CrosstermBackend, Direction, Layout, Stylize, Terminal},
+    prelude::{Constraint, CrosstermBackend, Direction, Layout, Stylize, Terminal},
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Clear, ListState, Paragraph, Tabs},
+    widgets::{Block, Borders, Clear, ListState, Tabs},
 };
 // use tokio::{runtime::Handle, task};
 
@@ -27,47 +27,6 @@ mod api;
 
 pub type Frame<'a> = ratatui::Frame<'a, CrosstermBackend<std::io::Stderr>>; // alias for the frame type
 
-struct StatefulList {
-    state: ListState,
-    items: Vec<api::Station>,
-}
-
-impl StatefulList {
-    async fn new() -> Self {
-        Self {
-            state: ListState::default(),
-            items: api::get_stations().await.unwrap_or_else(|_| vec![]),
-        }
-    }
-    fn next(&mut self) {
-        let i = match self.state.selected() {
-            Some(i) => {
-                if i >= self.items.len() - 1 {
-                    0
-                } else {
-                    i + 1
-                }
-            }
-            None => 0,
-        };
-        self.state.select(Some(i));
-    }
-
-    fn previous(&mut self) {
-        let i = match self.state.selected() {
-            Some(i) => {
-                if i == 0 {
-                    self.items.len() - 1
-                } else {
-                    i - 1
-                }
-            }
-            None => 0,
-        };
-        self.state.select(Some(i));
-    }
-}
-
 enum AppTabs {
     HomeTab,
     StationTab,
@@ -77,9 +36,6 @@ pub struct App {
     counter: i64,
     should_quit: bool,
     stations: Vec<api::Station>,
-    // station_list: StatefulList,
-    show_popup: bool,
-
     selected_station: Option<api::Station>,
     departures: Vec<api::DepartureInfo>,
     should_redraw: bool,
@@ -125,8 +81,6 @@ impl App {
             counter: 0,
             should_quit: false,
             stations: api::get_stations().await.unwrap_or_else(|_| vec![]),
-            // station_list: StatefulList::new().await,
-            show_popup: false,
             selected_station: None,
             departures: vec![],
             should_redraw: true,
@@ -160,34 +114,26 @@ impl App {
     async fn select_station(&mut self) {
         self.selected_station = Some(self.stations[self.counter as usize].clone());
         self.update_departures().await;
-        self.show_popup = !self.show_popup; //temp
+        self.selected_tab = AppTabs::HomeTab; // switch to home tab immidiately
+        self.should_redraw = true;
     }
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // initialize_panic_handler();
+    println!("initializing app...");
     startup()?;
 
     let mut terminal = Terminal::new(CrosstermBackend::new(stderr()))?;
-    println!("initializing app...");
+    terminal.clear()?;
     println!("fetching stations...");
     let mut app = App::new().await;
     terminal.clear()?;
-    // let mut departures = Deprtures::new();
-
-    // refresh_departures(&mut departures, &app).await;
-
-    // println!("current_station_id: {:#?}", app.stations[0]);
-
-    // if let stations = app.stations? {
-    //     println!("Stations: {:#?}", stations[0]);
-    // }
 
     loop {
-        // application render
-
         if app.should_redraw {
+            // only redraw if explicitly told to
             terminal.draw(|f| {
                 ui(&app, f);
             })?;
@@ -220,11 +166,6 @@ fn shutdown() -> Result<()> {
 }
 
 fn ui(app: &App, f: &mut Frame<'_>) {
-    // let paragraph = Paragraph::new(format!("Counter: {}", app.counter))
-    //     .block(static_widgets::get_app_border())
-    //     .style(Style::default().fg(Color::Yellow))
-    //     .alignment(Alignment::Center);
-
     let size = f.size();
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -234,7 +175,7 @@ fn ui(app: &App, f: &mut Frame<'_>) {
     let block = Block::default();
     f.render_widget(block, size);
 
-    let tab_names = vec!["Home", "Station"];
+    let tab_names = vec!["Departures", "Station List"];
     let titles = tab_names
         .iter()
         .map(|t| {
@@ -253,7 +194,7 @@ fn ui(app: &App, f: &mut Frame<'_>) {
     let itemlist = components::station_list::get_station_list_widget(app);
 
     let tabs = Tabs::new(titles)
-        .block(Block::default().borders(Borders::ALL).title("Tabs"))
+        .block(Block::default().borders(Borders::ALL).title("MVG FahrInfo"))
         .select(index)
         .style(Style::default())
         .highlight_style(Style::default().bold());
@@ -291,7 +232,7 @@ fn draw_popup(f: &mut Frame<'_>, app: &App) {
 
     let popup_title = match &app.selected_station {
         Some(station) => format!("{}", station.name),
-        None => "Unknown Station".to_string(),
+        None => "No station selected".to_string(),
     };
 
     let block = Block::default()
@@ -312,10 +253,10 @@ async fn update(app: &mut App) -> Result<()> {
             if key.kind == event::KeyEventKind::Press {
                 match key.code {
                     Char('q') => app.quit(),
-                    Char('p') => {
-                        app.show_popup = !app.show_popup;
-                        app.should_redraw = true;
-                    }
+                    // Char('p') => {
+                    //     app.show_popup = !app.show_popup;
+                    //     app.should_redraw = true;
+                    // }
                     KeyCode::Down => {
                         app.increment_station();
                         app.should_redraw = true;
