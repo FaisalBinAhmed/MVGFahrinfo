@@ -79,6 +79,7 @@ pub struct App {
     fetching: bool,
     selected_station: Option<api::Station>,
     departures: Vec<api::DepartureInfo>,
+    should_redraw: bool,
 }
 
 pub struct Deprtures {
@@ -130,6 +131,7 @@ impl App {
             fetching: true,
             selected_station: None,
             departures: vec![],
+            should_redraw: true,
         }
     }
     fn quit(&mut self) {
@@ -182,9 +184,15 @@ async fn main() -> Result<()> {
 
     loop {
         // application render
-        terminal.draw(|f| {
-            ui(&app, f);
-        })?;
+
+        if app.should_redraw{
+            
+            terminal.draw(|f| {                                                                             
+                ui(&app, f);
+            })?;
+            app.should_redraw = false;
+        }
+
         // application update
         update(&mut app).await?;
 
@@ -263,12 +271,7 @@ fn draw_popup(f: &mut Frame<'_>, app: &App) {
         .title(popup_title)
         .borders(Borders::ALL)
         .blue();
-    // let paragraph = Paragraph::new(format!(
-    //     "Selected station: {} in ({} min)",
-    //     app.selected_station.as_ref().unwrap().name,
-    //     diff.num_minutes()
-    // ))
-    // .block(block);
+
 
     let list = display_departures(&app.departures).block(block);
 
@@ -283,10 +286,10 @@ async fn update(app: &mut App) -> Result<()> {
             if key.kind == event::KeyEventKind::Press {
                 match key.code {
                     Char('q') => app.quit(),
-                    Char('p') => app.show_popup = !app.show_popup,
-                    KeyCode::Down => app.increment_station(),
-                    KeyCode::Up => app.decrement_station(),
-                    KeyCode::Enter => app.select_station().await,
+                    Char('p') => {app.show_popup = !app.show_popup; app.should_redraw = true;},
+                    KeyCode::Down => {app.increment_station(); app.should_redraw = true;},
+                    KeyCode::Up => {app.decrement_station(); app.should_redraw = true;},
+                    KeyCode::Enter => {app.select_station().await; app.should_redraw = true;},
                     _ => {}
                 }
             }
@@ -294,43 +297,6 @@ async fn update(app: &mut App) -> Result<()> {
     }
     return Ok(());
 }
-
-// async fn update_stations(app: &mut App) {
-//     if let Ok(station_ids) = api::fetch_station_ids().await {
-//         // println!("Fetched station ids {}", station_ids.len());
-
-//         let mut counter = 0;
-//         let station_count = station_ids.len();
-
-//         for station_id in station_ids {
-//             match api::fetch_station_info(&station_id).await {
-//                 Ok(station_info) => {
-//                     counter += 1;
-//                     // println!("{:#?}", station_info);
-//                     if station_info.len() > 0 && station_info[0].name.len() > 0 {
-//                         // app.stations.push(station_info[0].clone())
-//                         // continue;
-//                     } else {
-//                         // println!("No station info found for {}", station_id);
-//                     }
-//                 }
-//                 Err(e) => {
-//                     counter += 1;
-//                     println!("Error fetching station info for {}", e);
-//                 }
-//             }
-
-//             // let p = (counter / station_count) * 100;
-//             app.progress = counter as u16;
-//             // println!("Progress: {} {}", p, app.progress);
-
-//             if counter == 10 {
-//                 app.fetching = false;
-//                 break;
-//             }
-//         }
-//     }
-// }
 
 pub fn initialize_panic_handler() {
     let original_hook = std::panic::take_hook();
