@@ -89,10 +89,7 @@ pub fn display_departures(departures: &Vec<api::DepartureInfo>) -> List {
             .map(|(index, departure)| {
                 ListItem::new(vec![
                     Line::from(vec![
-                        Span::styled(
-                            format!("{}", departure.label),
-                            Style::default().fg(Color::Blue),
-                        ),
+                        get_vehicle_label(&departure.label, &departure.transport_type),
                         Span::styled(
                             format!(" {}", departure.destination),
                             Style::default().fg(Color::LightCyan),
@@ -110,6 +107,39 @@ pub fn display_departures(departures: &Vec<api::DepartureInfo>) -> List {
             })
             .collect::<Vec<ListItem>>(),
     );
+}
+
+fn get_vehicle_label<'a>(label: &'a str, transport_type: &'a str) -> Span<'a> {
+    let icon = match transport_type {
+        "UBAHN" => Span::styled(
+            format!(" {} ", label),
+            Style::default().bg(Color::Rgb(29, 43, 83)).fg(Color::White), // .bold(),
+        ),
+        "BUS" => Span::styled(
+            format!(" {} ", label),
+            Style::default()
+                .bg(Color::Rgb(17, 93, 111))
+                .fg(Color::White),
+        ),
+        "TRAM" => Span::styled(
+            format!(" {} ", label),
+            Style::default()
+                .bg(Color::Rgb(231, 27, 30))
+                .fg(Color::White),
+        ),
+        "SBAHN" => Span::styled(
+            format!(" {} ", label),
+            Style::default()
+                .bg(Color::Rgb(84, 253, 84))
+                .fg(Color::Black),
+        ),
+        // .bold(),
+        _ => Span::styled(
+            label,
+            Style::default().bg(Color::LightYellow).fg(Color::Black),
+        ),
+    };
+    return icon;
 }
 
 fn get_minutes(time: i64) -> i64 {

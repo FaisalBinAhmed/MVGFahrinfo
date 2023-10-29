@@ -15,7 +15,7 @@ use ratatui::{
     prelude::{Constraint, CrosstermBackend, Direction, Layout, Stylize, Terminal},
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Clear, ListState, Tabs},
+    widgets::{Block, Borders, Clear, Paragraph, Tabs},
 };
 // use tokio::{runtime::Handle, task};
 
@@ -27,6 +27,7 @@ mod api;
 
 pub type Frame<'a> = ratatui::Frame<'a, CrosstermBackend<std::io::Stderr>>; // alias for the frame type
 
+#[derive(PartialEq)] // need this to do binary comparison
 enum AppTabs {
     HomeTab,
     StationTab,
@@ -39,39 +40,8 @@ pub struct App {
     selected_station: Option<api::Station>,
     departures: Vec<api::DepartureInfo>,
     should_redraw: bool,
-}
-
-pub struct Deprtures {
-    current_station_id: String,
-    departures: Vec<api::DepartureInfo>,
-    is_loading: bool,
-}
-
-impl Deprtures {
-    fn new() -> Self {
-        Self {
-            current_station_id: String::from(""),
-            departures: vec![],
-            is_loading: false,
-        }
-    }
-}
-
-async fn refresh_departures(departures: &mut Deprtures, app: &App) {
-    loop {
-        departures.is_loading = true;
-        let current_station_id: &str = match &app.selected_station {
-            Some(station) => station.id.as_str(),
-            None => "",
-        };
-
-        departures.departures = get_departures(current_station_id)
-            .await
-            .unwrap_or_else(|_| vec![]);
-        //wait a minute
-        departures.is_loading = false;
-        tokio::time::sleep(std::time::Duration::from_secs(60)).await;
-    }
+    // auto_refresh: bool,
+    status: String,
 }
 
 impl App {
@@ -84,6 +54,8 @@ impl App {
             selected_station: None,
             departures: vec![],
             should_redraw: true,
+            // auto_refresh: false,
+            status: "Loading stations...".to_string(),
         }
     }
     fn quit(&mut self) {
@@ -113,9 +85,12 @@ impl App {
 
     async fn select_station(&mut self) {
         self.selected_station = Some(self.stations[self.counter as usize].clone());
+        self.status = format!("Fetching departures");
         self.update_departures().await;
-        self.selected_tab = AppTabs::HomeTab; // switch to home tab immidiately
+        self.selected_tab = AppTabs::HomeTab; // switch to home tab immidiatelyq
         self.should_redraw = true;
+        // self.auto_refresh = true;
+        // self.keep_refreshing_departures().await;
     }
 }
 
@@ -140,8 +115,16 @@ async fn main() -> Result<()> {
             app.should_redraw = false;
         }
 
+        // if app.auto_refresh {
+        //     app.keep_refreshing_departures().await
+        // }
         // application update
         update(&mut app).await?;
+
+        // if app.selected_tab == AppTabs::HomeTab {
+        //     app.update_departures().await;
+        //     app.should_redraw = true;
+        // }
 
         // application exit
         if app.should_quit {
@@ -169,7 +152,11 @@ fn ui(app: &App, f: &mut Frame<'_>) {
     let size = f.size();
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Min(0)])
+        .constraints([
+            Constraint::Length(3),
+            Constraint::Min(0),
+            Constraint::Length(3),
+        ])
         .split(size);
 
     let block = Block::default();
@@ -201,35 +188,30 @@ fn ui(app: &App, f: &mut Frame<'_>) {
 
     f.render_widget(tabs, chunks[0]);
     match app.selected_tab {
-        AppTabs::HomeTab => draw_popup(f, app),
+        AppTabs::HomeTab => draw_departures(f, app),
         AppTabs::StationTab => f.render_widget(itemlist, chunks[1]),
     };
 
-    // f.render_widget(itemlist, chunks[1]);
+    let bottom_line_text = Line::from(vec![
+        Span::styled(
+            format!("Press q to close app, tab to switch tabs and enter to select station"),
+            Style::default(),
+        ),
+        Span::styled(
+            format!(" ({})", &app.status),
+            Style::default().fg(Color::LightCyan),
+        ),
+    ]);
 
-    // f.render_widget(
-    //     Paragraph::new(format!("Press p to toggle departures, enter to select station, q to quit app"))
-    //         .light_red()
-    //         .block(Block::default().borders(Borders::TOP))
-    //         .alignment(Alignment::Center),
-    //     chunks[2],
-    // );
-
-    // if app.show_popup {
-    //     draw_popup(f, app)
-    // }
+    f.render_widget(
+        Paragraph::new(bottom_line_text).light_red(),
+        // .block(Block::default().borders(Borders::TOP))
+        // .alignment(Alignment::Center),
+        chunks[2],
+    );
 }
 
-fn draw_popup(f: &mut Frame<'_>, app: &App) {
-    // let popup_layout = Layout::default()
-    //     .direction(Direction::Vertical)
-    //     .constraints([
-    //         Constraint::Percentage(10),
-    //         Constraint::Percentage(80),
-    //         Constraint::Percentage(10),
-    //     ])
-    //     .split(f.size());
-
+fn draw_departures(f: &mut Frame<'_>, app: &App) {
     let popup_title = match &app.selected_station {
         Some(station) => format!("{}", station.name),
         None => "No station selected".to_string(),
@@ -253,10 +235,10 @@ async fn update(app: &mut App) -> Result<()> {
             if key.kind == event::KeyEventKind::Press {
                 match key.code {
                     Char('q') => app.quit(),
-                    // Char('p') => {
-                    //     app.show_popup = !app.show_popup;
-                    //     app.should_redraw = true;
-                    // }
+                    Char('r') => {
+                        app.update_departures().await;
+                        app.should_redraw = true;
+                    }
                     KeyCode::Down => {
                         app.increment_station();
                         app.should_redraw = true;
@@ -273,7 +255,9 @@ async fn update(app: &mut App) -> Result<()> {
                         app.toggle_tabs();
                         app.should_redraw = true;
                     }
-                    _ => {}
+                    _ => {
+                        // todo: pass the key event
+                    }
                 }
             }
         }
