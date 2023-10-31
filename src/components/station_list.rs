@@ -86,7 +86,7 @@ pub fn display_departures(departures: &Vec<api::DepartureInfo>) -> List {
         departures
             .iter()
             .enumerate()
-            .map(|(index, departure)| {
+            .map(|(_index, departure)| {
                 ListItem::new(vec![
                     Line::from(vec![
                         get_vehicle_label(&departure.label, &departure.transport_type),
