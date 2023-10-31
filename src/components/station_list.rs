@@ -85,7 +85,7 @@ fn get_product_icon_spans(products: &Vec<String>) -> Vec<Span> {
 pub fn display_departures_table(departures: &Vec<api::DepartureInfo>) -> Table {
     let header_cells = ["Vehicle", "Direction", "ETA"]
         .iter()
-        .map(|h| Cell::from(*h).style(Style::default().fg(Color::LightBlue)));
+        .map(|h| Cell::from(*h).style(Style::default().fg(Color::Gray)));
 
     let header = Row::new(header_cells)
         .style(
@@ -103,7 +103,9 @@ pub fn display_departures_table(departures: &Vec<api::DepartureInfo>) -> Table {
                 get_minutes(item.realtime_departure_time.clone())
             )),
         ];
-        return Row::new(cells).height(1);
+        return Row::new(cells)
+            .height(1)
+            .style(Style::default().fg(Color::White));
     });
 
     let t = Table::new(rows)
@@ -111,8 +113,8 @@ pub fn display_departures_table(departures: &Vec<api::DepartureInfo>) -> Table {
         // .highlight_style(Style::default().fg(Color::Yellow))
         .highlight_symbol(">> ")
         .widths(&[
-            Constraint::Percentage(20),
-            Constraint::Max(60),
+            Constraint::Percentage(10),
+            Constraint::Max(70),
             Constraint::Min(20),
         ]);
     return t;

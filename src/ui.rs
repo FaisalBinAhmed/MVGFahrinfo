@@ -83,7 +83,8 @@ fn draw_departures(f: &mut Frame<'_>, app: &App) {
     let block = Block::default()
         .title(popup_title)
         .borders(Borders::ALL)
-        .padding(Padding::uniform(1));
+        .padding(Padding::new(2, 2, 1, 1))
+        .style(Style::default().fg(Color::LightCyan));
 
     // let list = display_departures(&app.departures).block(block);
     let table = display_departures_table(&app.departures).block(block);
