@@ -46,8 +46,8 @@ pub fn render(app: &mut App, f: &mut Frame) {
     let tabs = Tabs::new(titles)
         .block(Block::default().borders(Borders::ALL).title("MVG FahrInfo"))
         .select(index)
-        .style(Style::default().fg(Color::Green))
-        .highlight_style(Style::default());
+        .style(Style::default())
+        .highlight_style(Style::default().fg(Color::Green));
 
     f.render_widget(tabs, chunks[0]);
     match app.selected_tab {
@@ -57,8 +57,8 @@ pub fn render(app: &mut App, f: &mut Frame) {
 
     let bottom_line_text = Line::from(vec![
         Span::styled(
-            format!("Press q to close app, tab to switch tabs and enter to select station"),
-            Style::default(),
+            format!("Q: close app, tab: switch tabs, up/down: scroll stations, enter: select station, r: reload departures"),
+            Style::default().fg(Color::LightYellow),
         ),
         Span::styled(
             format!(" ({})", &app.status),

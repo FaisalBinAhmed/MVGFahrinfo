@@ -6,6 +6,8 @@ use std::{
     time::{Duration, Instant},
 };
 
+/// reference: https://ratatui.rs/tutorial/counter-app/event.html
+
 #[derive(Clone, Copy, Debug)]
 pub enum Event {
     Tick,

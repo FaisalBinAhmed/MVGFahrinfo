@@ -52,9 +52,13 @@ impl App {
 
     pub async fn update_departures(&mut self) {
         if let Some(station) = &self.selected_station {
-            self.departures = api::get_departures(&station.id)
-                .await
-                .unwrap_or_else(|_| vec![]);
+            self.departures = match api::get_departures(&station.id).await {
+                Ok(departures) => departures,
+                Err(_) => {
+                    println!("Error fetching departures");
+                    vec![]
+                }
+            }
         }
     }
 
