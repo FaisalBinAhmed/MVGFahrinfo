@@ -54,8 +54,8 @@ impl App {
         if let Some(station) = &self.selected_station {
             self.departures = match api::get_departures(&station.id).await {
                 Ok(departures) => departures,
-                Err(_) => {
-                    println!("Error fetching departures");
+                Err(e) => {
+                    println!("Error fetching departures {}", e);
                     vec![]
                 }
             }

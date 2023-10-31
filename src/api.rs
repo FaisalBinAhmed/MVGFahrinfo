@@ -51,9 +51,10 @@ pub struct DepartureInfo {
     pub sev: bool,
     pub platform: Option<i64>,
     pub messages: Vec<String>,
-    pub banner_hash: String,          //"",
-    pub occupancy: String,            //"UNKNOWN",
+    pub banner_hash: String, //"",
+    pub occupancy: String,   //"UNKNOWN",
     pub stop_point_global_id: String, //"de:09162:6:52:52"
+                             // pub delay_in_minutes: Option<i64>,
 }
 
 pub async fn get_departures(id: &str) -> Result<Vec<DepartureInfo>> {
