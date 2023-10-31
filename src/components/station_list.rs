@@ -1,8 +1,9 @@
 use chrono::Utc;
 use ratatui::{
+    prelude::Constraint,
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{List, ListItem},
+    widgets::{Cell, List, ListItem, Row, Table},
 };
 
 use crate::{api, App};
@@ -79,6 +80,42 @@ fn get_product_icon_spans(products: &Vec<String>) -> Vec<Span> {
         spans.push(Span::raw(" ")); // add a space between the icons
     }
     return spans;
+}
+
+pub fn display_departures_table(departures: &Vec<api::DepartureInfo>) -> Table {
+    let header_cells = ["Vehicle", "Direction", "ETA"]
+        .iter()
+        .map(|h| Cell::from(*h).style(Style::default().fg(Color::LightBlue)));
+
+    let header = Row::new(header_cells)
+        .style(
+            Style::default(), // .bg(Color::White)
+        )
+        .height(2)
+        .bottom_margin(1);
+
+    let rows = departures.iter().map(|item| {
+        let cells = vec![
+            Cell::from(get_vehicle_label(&item.label, &item.transport_type)),
+            Cell::from(format!("{}", item.destination)),
+            Cell::from(format!(
+                " {} min",
+                get_minutes(item.realtime_departure_time.clone())
+            )),
+        ];
+        return Row::new(cells).height(1);
+    });
+
+    let t = Table::new(rows)
+        .header(header)
+        // .highlight_style(Style::default().fg(Color::Yellow))
+        .highlight_symbol(">> ")
+        .widths(&[
+            Constraint::Percentage(20),
+            Constraint::Max(60),
+            Constraint::Min(20),
+        ]);
+    return t;
 }
 
 pub fn display_departures(departures: &Vec<api::DepartureInfo>) -> List {

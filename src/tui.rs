@@ -18,10 +18,10 @@ pub struct Tui {
 
 impl Tui {
     pub fn new(terminal: CrosstermTerminal, events: EventHandler) -> Self {
-        Self { terminal, events }
+        Self { terminal, events } //setting own fields and returning an instance of the struct
     }
     pub fn enter(&mut self) -> Result<()> {
-        terminal::enable_raw_mode()?;
+        terminal::enable_raw_mode()?; // we handle all the key events
         crossterm::execute!(io::stderr(), EnterAlternateScreen, EnableMouseCapture)?;
         let panic_hook = panic::take_hook();
         panic::set_hook(Box::new(move |panic| {
@@ -30,7 +30,7 @@ impl Tui {
         }));
 
         self.terminal.hide_cursor()?;
-        self.terminal.clear()?;
+        self.terminal.clear()?; // in case of panic, we clear the terminal
         Ok(())
     }
 

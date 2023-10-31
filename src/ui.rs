@@ -2,12 +2,12 @@ use ratatui::{
     prelude::{Constraint, Direction, Layout},
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Clear, Paragraph, Tabs},
+    widgets::{Block, Borders, Clear, Padding, Paragraph, Tabs},
 };
 
 use crate::{
     app::{App, AppTabs},
-    components::{self, static_widgets, station_list::display_departures},
+    components::{self, static_widgets, station_list::display_departures_table},
     tui::Frame,
 };
 
@@ -80,11 +80,15 @@ fn draw_departures(f: &mut Frame<'_>, app: &App) {
         None => "No station selected".to_string(),
     };
 
-    let block = Block::default().title(popup_title).borders(Borders::ALL);
+    let block = Block::default()
+        .title(popup_title)
+        .borders(Borders::ALL)
+        .padding(Padding::uniform(1));
 
-    let list = display_departures(&app.departures).block(block);
+    // let list = display_departures(&app.departures).block(block);
+    let table = display_departures_table(&app.departures).block(block);
 
-    let area = static_widgets::centered_rect(60, 40, f.size());
+    let area = static_widgets::centered_rect(69, 50, f.size());
     f.render_widget(Clear, area); //this clears out the background
-    f.render_widget(list, area);
+    f.render_widget(table, area);
 }
