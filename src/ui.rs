@@ -1,7 +1,7 @@
 use ratatui::{
     prelude::{Constraint, Direction, Layout},
-    style::{Color, Style},
-    text::{Line, Span},
+    style::{Color, Modifier, Style},
+    text::{Line, Span, Text},
     widgets::{Block, Borders, Clear, Padding, Paragraph, Tabs},
 };
 
@@ -60,7 +60,7 @@ pub fn render(app: &mut App, f: &mut Frame) {
 
     let bottom_line_text = Line::from(vec![
         Span::styled(
-            format!("Q: close app, tab: switch tabs, up/down: scroll stations, enter: select station, r: reload departures"),
+            format!("Q: close app, tab: switch tabs, up/down: scroll stations, enter: select station, R: reload departures, S: search"),
             Style::default().fg(Color::LightYellow),
         ),
         Span::styled(
@@ -69,12 +69,32 @@ pub fn render(app: &mut App, f: &mut Frame) {
         ),
     ]);
 
-    f.render_widget(
-        Paragraph::new(bottom_line_text),
-        // .block(Block::default().borders(Borders::TOP))
-        // .alignment(Alignment::Center),
-        chunks[2],
-    );
+    f.render_widget(Paragraph::new(bottom_line_text), chunks[2]);
+
+    //SEARCH MODAL
+
+    if app.app_mode == crate::app::AppMode::Search {
+        let popup_title = "Search for a station";
+
+        let mut text = Text::from(Line::from(app.query.clone()));
+        text.patch_style(Style::default().add_modifier(Modifier::RAPID_BLINK));
+
+        let block = Block::default()
+            .title(popup_title)
+            .borders(Borders::ALL)
+            .padding(Padding::new(2, 2, 1, 1))
+            .style(Style::default().fg(Color::Yellow));
+
+        let input_field = Paragraph::new(text)
+            .block(Block::default().borders(Borders::ALL).title(popup_title))
+            .style(Style::default().fg(Color::LightCyan))
+            .alignment(ratatui::prelude::Alignment::Left);
+        // .block(block);
+
+        let area = static_widgets::centered_rect(69, 50, f.size());
+        f.render_widget(Clear, area); //this clears out the background
+        f.render_widget(input_field, area);
+    }
 }
 
 fn draw_departures(f: &mut Frame<'_>, app: &App) {
