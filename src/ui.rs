@@ -51,7 +51,7 @@ pub fn render(app: &mut App, f: &mut Frame) {
 
     f.render_widget(tabs, chunks[0]);
 
-    let list_state = &mut app.scroll_state.clone(); //todo: why clone?
+    let list_state = &mut app.scroll_state.clone(); //we can clone this value, because it is cheap and the function is called only once per frame
 
     match app.selected_tab {
         AppTabs::HomeTab => draw_departures(f, app),

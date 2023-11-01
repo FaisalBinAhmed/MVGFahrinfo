@@ -1,4 +1,4 @@
-use ratatui::widgets::{ListState, ScrollbarState};
+use ratatui::widgets::ListState;
 
 use crate::api;
 
@@ -42,8 +42,6 @@ impl App {
         self.should_quit = true;
     }
     pub fn increment_station(&mut self) {
-        // self.counter += 1;
-
         let i = match self.scroll_state.selected() {
             Some(i) => {
                 if i >= self.stations.len() - 1 {
@@ -58,10 +56,6 @@ impl App {
     }
 
     pub fn decrement_station(&mut self) {
-        // if self.counter > 0 {
-        //     self.counter -= 1;
-        // }
-
         let i = match self.scroll_state.selected() {
             Some(i) => {
                 if i == 0 {
@@ -94,7 +88,6 @@ impl App {
     }
 
     pub async fn select_station(&mut self) {
-        // self.selected_station = Some(self.stations[self.counter as usize].clone());
         self.selected_station = match self.scroll_state.selected() {
             Some(i) => Some(self.stations[i].clone()),
             None => None,
