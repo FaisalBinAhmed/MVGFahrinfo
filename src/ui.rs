@@ -50,9 +50,12 @@ pub fn render(app: &mut App, f: &mut Frame) {
         .highlight_style(Style::default().fg(Color::Green));
 
     f.render_widget(tabs, chunks[0]);
+
+    let list_state = &mut app.scroll_state.clone(); //todo: why clone?
+
     match app.selected_tab {
         AppTabs::HomeTab => draw_departures(f, app),
-        AppTabs::StationTab => f.render_widget(itemlist, chunks[1]),
+        AppTabs::StationTab => f.render_stateful_widget(itemlist, chunks[1], list_state),
     };
 
     let bottom_line_text = Line::from(vec![

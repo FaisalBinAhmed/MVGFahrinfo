@@ -11,10 +11,13 @@ pub async fn update(app: &mut App, key_event: KeyEvent) {
         }
         KeyCode::Down => {
             app.increment_station();
+
             app.should_redraw = true;
         }
+        //todo: check which screen we are on
         KeyCode::Up => {
             app.decrement_station();
+
             app.should_redraw = true;
         }
         KeyCode::Enter => {

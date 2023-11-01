@@ -1,7 +1,7 @@
 use chrono::Utc;
 use ratatui::{
     prelude::Constraint,
-    style::{Color, Style},
+    style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Cell, List, ListItem, Row, Table},
 };
@@ -12,36 +12,26 @@ pub fn get_station_list_widget(app: &App) -> List {
     return List::new(
         app.stations
             .iter()
-            .enumerate()
-            .map(|(index, station)| {
+            .map(|station| {
                 ListItem::new(vec![
                     Line::from(vec![
-                        Span::styled(
-                            format!("{}", station.name),
-                            Style::default().fg(if index == app.counter as usize {
-                                Color::Blue
-                            } else {
-                                Color::White
-                            }),
-                        ),
+                        Span::styled(format!("{}", station.name), Style::default()),
                         Span::styled(
                             format!(" ({})", station.tariff_zones),
                             Style::default().fg(Color::LightCyan),
-                        ),
-                        Span::styled(
-                            if index == app.counter as usize {
-                                format!(" <<",)
-                            } else {
-                                format!("  ")
-                            },
-                            Style::default().fg(Color::LightYellow),
                         ),
                     ]),
                     Line::from(get_product_icon_spans(&station.products)),
                 ])
             })
             .collect::<Vec<ListItem>>(),
+    )
+    .highlight_style(
+        Style::default()
+            .bg(Color::Rgb(38, 35, 53))
+            .add_modifier(Modifier::BOLD),
     );
+    // .highlight_symbol(">> ");
 }
 
 fn get_product_icon_spans(products: &Vec<String>) -> Vec<Span> {
@@ -94,11 +84,11 @@ pub fn display_departures_table(departures: &Vec<api::DepartureInfo>) -> Table {
         .height(2)
         .bottom_margin(1);
 
-    let rows = departures.iter().map(|item| {
+    let rows = departures.iter().enumerate().map(|(index, item)| {
         let cells = vec![
             Cell::from(get_vehicle_label(&item.label, &item.transport_type)),
             Cell::from(format!("{}", item.destination)),
-            Cell::from(get_platform_number(item.platform)),
+            Cell::from(get_platform_number(item.platform, index)),
             Cell::from(format!(
                 "{} min",
                 get_minutes(item.realtime_departure_time.clone())
@@ -150,12 +140,14 @@ pub fn display_departures(departures: &Vec<api::DepartureInfo>) -> List {
     );
 }
 
-fn get_platform_number<'a>(platform: Option<i64>) -> Span<'a> {
+fn get_platform_number<'a>(platform: Option<i64>, index: usize) -> Span<'a> {
+    let bg = if index % 2 == 0 {
+        Color::White
+    } else {
+        Color::Gray
+    };
     return match platform {
-        Some(p) => Span::styled(
-            format!(" {} ", p),
-            Style::default().bg(Color::White).fg(Color::Black),
-        ),
+        Some(p) => Span::styled(format!(" {} ", p), Style::default().bg(bg).fg(Color::Black)),
         None => Span::styled(" ", Style::default().fg(Color::White)),
     };
 }
@@ -163,8 +155,8 @@ fn get_platform_number<'a>(platform: Option<i64>) -> Span<'a> {
 fn get_vehicle_label<'a>(label: &'a str, transport_type: &str) -> Span<'a> {
     let icon = match transport_type {
         "UBAHN" => Span::styled(
-            format!(" {} ", label),
-            Style::default().bg(Color::Rgb(29, 43, 83)).fg(Color::White), // .bold(),
+            format!(" {} ", label), //todo: get ubahn specific color
+            Style::default().bg(Color::Rgb(29, 43, 83)).fg(Color::White),
         ),
         "BUS" => Span::styled(
             format!(" {} ", label),
@@ -179,7 +171,7 @@ fn get_vehicle_label<'a>(label: &'a str, transport_type: &str) -> Span<'a> {
                 .fg(Color::White),
         ),
         "SBAHN" => Span::styled(
-            format!(" {} ", label),
+            format!(" {} ", label), //todo: get sbahn specific color
             Style::default()
                 .bg(Color::Rgb(84, 253, 84))
                 .fg(Color::Black),
