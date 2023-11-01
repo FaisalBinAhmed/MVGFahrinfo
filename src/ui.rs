@@ -74,7 +74,7 @@ pub fn render(app: &mut App, f: &mut Frame) {
     //SEARCH MODAL
 
     if app.app_mode == crate::app::AppMode::Search {
-        let popup_title = "Search for a station";
+        let popup_title = "⌕ Search for a station";
 
         let mut text = Text::from(Line::from(app.query.clone()));
         text.patch_style(Style::default().add_modifier(Modifier::RAPID_BLINK));
