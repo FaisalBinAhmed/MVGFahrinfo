@@ -83,7 +83,7 @@ fn get_product_icon_spans(products: &Vec<String>) -> Vec<Span> {
 }
 
 pub fn display_departures_table(departures: &Vec<api::DepartureInfo>) -> Table {
-    let header_cells = ["Vehicle", "Direction", "ETA"]
+    let header_cells = ["Vehicle", "Direction", "Platform", "ETA"]
         .iter()
         .map(|h| Cell::from(*h).style(Style::default().fg(Color::Gray)));
 
@@ -98,24 +98,26 @@ pub fn display_departures_table(departures: &Vec<api::DepartureInfo>) -> Table {
         let cells = vec![
             Cell::from(get_vehicle_label(&item.label, &item.transport_type)),
             Cell::from(format!("{}", item.destination)),
+            Cell::from(get_platform_number(item.platform)),
             Cell::from(format!(
-                " {} min",
+                "{} min",
                 get_minutes(item.realtime_departure_time.clone())
             )),
         ];
-        return Row::new(cells)
-            .height(1)
-            .style(Style::default().fg(Color::White));
+        return Row::new(cells).height(1);
+        // .style(Style::default().fg(Color::White));
     });
 
     let t = Table::new(rows)
         .header(header)
         // .highlight_style(Style::default().fg(Color::Yellow))
         .highlight_symbol(">> ")
+        // .style(Style::default().bg(Color::Black).bg(Color::Black))
         .widths(&[
             Constraint::Percentage(10),
-            Constraint::Max(70),
-            Constraint::Min(20),
+            Constraint::Max(60),
+            Constraint::Percentage(20),
+            Constraint::Min(10),
         ]);
     return t;
 }
@@ -148,7 +150,17 @@ pub fn display_departures(departures: &Vec<api::DepartureInfo>) -> List {
     );
 }
 
-fn get_vehicle_label<'a>(label: &'a str, transport_type: &'a str) -> Span<'a> {
+fn get_platform_number<'a>(platform: Option<i64>) -> Span<'a> {
+    return match platform {
+        Some(p) => Span::styled(
+            format!(" {} ", p),
+            Style::default().bg(Color::White).fg(Color::Black),
+        ),
+        None => Span::styled(" ", Style::default().fg(Color::White)),
+    };
+}
+
+fn get_vehicle_label<'a>(label: &'a str, transport_type: &str) -> Span<'a> {
     let icon = match transport_type {
         "UBAHN" => Span::styled(
             format!(" {} ", label),
