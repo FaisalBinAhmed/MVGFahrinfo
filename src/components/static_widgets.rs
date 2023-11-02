@@ -6,7 +6,7 @@ use ratatui::{
 pub fn get_app_border() -> Block<'static> {
     return Block::default()
         .borders(Borders::ALL)
-        .title("MVG Departures")
+        .title(" MVG Departures ")
         .border_type(BorderType::Rounded)
         .title_alignment(Alignment::Center);
 }

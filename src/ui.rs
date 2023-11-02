@@ -44,7 +44,11 @@ pub fn render(app: &mut App, f: &mut Frame) {
     let itemlist = components::station_list::get_station_list_widget(app);
 
     let tabs = Tabs::new(titles)
-        .block(Block::default().borders(Borders::ALL).title("MVG FahrInfo"))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(" MVG FahrInfo "),
+        )
         .select(index)
         .style(Style::default())
         .highlight_style(Style::default().fg(Color::Green));
@@ -93,7 +97,7 @@ pub fn render(app: &mut App, f: &mut Frame) {
     //SEARCH MODAL
 
     if app.app_mode == crate::app::AppMode::Search {
-        let popup_title = "⌕ Search for a station";
+        let popup_title = " ⌕ Search for a station ";
 
         let mut text = Text::from(Line::from(app.query.clone()));
         text.patch_style(Style::default().add_modifier(Modifier::RAPID_BLINK));
@@ -118,8 +122,8 @@ pub fn render(app: &mut App, f: &mut Frame) {
 
 fn draw_departures(f: &mut Frame<'_>, app: &App) {
     let popup_title = match &app.selected_station {
-        Some(station) => format!("{}", station.name),
-        None => "No station selected".to_string(),
+        Some(station) => format!(" {} ", station.name),
+        None => " No station selected ".to_string(),
     };
 
     let block = Block::default()
