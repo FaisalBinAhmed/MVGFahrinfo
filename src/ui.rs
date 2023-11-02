@@ -1,6 +1,6 @@
 use ratatui::{
     prelude::{Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
+    style::{Color, Modifier, Style, Stylize},
     text::{Line, Span, Text},
     widgets::{Block, Borders, Clear, Padding, Paragraph, Tabs},
 };
@@ -18,7 +18,7 @@ pub fn render(app: &mut App, f: &mut Frame) {
         .constraints([
             Constraint::Length(3),
             Constraint::Min(0),
-            Constraint::Length(3),
+            Constraint::Length(1),
         ])
         .split(size);
 
@@ -58,18 +58,37 @@ pub fn render(app: &mut App, f: &mut Frame) {
         AppTabs::StationTab => f.render_stateful_widget(itemlist, chunks[1], list_state),
     };
 
-    let bottom_line_text = Line::from(vec![
-        Span::styled(
-            format!("Q: close app, tab: switch tabs, up/down: scroll stations, enter: select station, R: reload departures, S: search"),
-            Style::default().fg(Color::LightYellow),
-        ),
-        Span::styled(
-            format!(" ({})", &app.status),
-            Style::default().fg(Color::LightCyan),
-        ),
-    ]);
+    //Status bar
 
-    f.render_widget(Paragraph::new(bottom_line_text), chunks[2]);
+    let app_mode_indicator: Vec<Span> = match app.app_mode {
+        crate::app::AppMode::Normal => {
+            vec![
+            Span::styled(format!(" NORMAL "), Style::default().bg(Color::Blue).bold()),
+            Span::styled(
+            format!(" Q: close app. Tab: switch tabs. Enter: select station. R: reload departures. S: search. "),
+            Style::default()),
+          Span::styled(
+            format!(" ({})", &app.status),
+            Style::default().fg(Color::LightCyan))]
+        }
+        crate::app::AppMode::Search => {
+            vec![
+                Span::styled(format!(" SEARCH "), Style::default().bg(Color::Red).bold()),
+                Span::styled(
+                    format!(" Esc: back to normal mode. enter: select station. "),
+                    Style::default(),
+                ),
+                Span::styled(
+                    format!("({})", &app.status),
+                    Style::default().fg(Color::LightCyan),
+                ),
+            ]
+        }
+    };
+
+    let status_bar = Line::from(app_mode_indicator);
+
+    f.render_widget(Paragraph::new(status_bar), chunks[2]);
 
     //SEARCH MODAL
 
@@ -79,11 +98,11 @@ pub fn render(app: &mut App, f: &mut Frame) {
         let mut text = Text::from(Line::from(app.query.clone()));
         text.patch_style(Style::default().add_modifier(Modifier::RAPID_BLINK));
 
-        let block = Block::default()
-            .title(popup_title)
-            .borders(Borders::ALL)
-            .padding(Padding::new(2, 2, 1, 1))
-            .style(Style::default().fg(Color::Yellow));
+        // let block = Block::default()
+        //     .title(popup_title)
+        //     .borders(Borders::ALL)
+        //     .padding(Padding::new(2, 2, 1, 1))
+        //     .style(Style::default().fg(Color::Yellow));
 
         let input_field = Paragraph::new(text)
             .block(Block::default().borders(Borders::ALL).title(popup_title))
