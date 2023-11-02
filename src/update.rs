@@ -1,4 +1,5 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use ratatui::widgets::ListState;
 
 use crate::app::{App, AppMode};
 
@@ -47,10 +48,12 @@ pub async fn update(app: &mut App, key_event: KeyEvent) {
                 app.should_redraw = true;
             }
             KeyCode::Char(to_insert) => {
+                app.search_scroll_state = ListState::default();
                 app.enter_char(to_insert);
                 app.should_redraw = true;
             }
             KeyCode::Backspace => {
+                app.search_scroll_state = ListState::default();
                 app.delete_char();
                 app.should_redraw = true;
             }

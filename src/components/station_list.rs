@@ -3,7 +3,7 @@ use ratatui::{
     prelude::Constraint,
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Cell, List, ListItem, Row, Table},
+    widgets::{Cell, List, ListItem, ListState, Row, Table},
 };
 
 use crate::{

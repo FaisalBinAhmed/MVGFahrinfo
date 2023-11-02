@@ -2,7 +2,7 @@ use ratatui::{
     prelude::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Clear, List, ListItem, Padding, Paragraph, Tabs},
+    widgets::{Block, Borders, Clear, Padding, Paragraph, Tabs},
 };
 
 use crate::{

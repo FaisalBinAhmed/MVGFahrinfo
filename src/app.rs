@@ -199,6 +199,7 @@ impl App {
         };
         self.status = format!("Fetching departures from search");
         self.suggested_stations.clear();
+        self.search_scroll_state = ListState::default();
         self.update_departures().await;
         self.selected_tab = AppTabs::HomeTab;
         self.app_mode = AppMode::Normal;

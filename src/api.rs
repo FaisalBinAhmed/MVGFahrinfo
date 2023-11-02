@@ -1,6 +1,8 @@
+use std::fs::File;
+
 // #[allow(unused, dead_code, unused_)]
 use anyhow::Result;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 pub async fn fetch_station_ids() -> Result<Vec<String>> {
     let full_url = "https://www.mvg.de/.rest/zdm/mvgStationGlobalIds";
 
@@ -68,7 +70,7 @@ pub async fn get_departures(id: &str) -> Result<Vec<DepartureInfo>> {
     Ok(resp)
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Station {
     pub name: String,
@@ -97,11 +99,28 @@ pub struct Station {
 //       "latitude":48.13951,
 //       "longitude":11.56613
 
+// todo: we need a way to manually refrest this file
 pub async fn get_stations() -> Result<Vec<Station>> {
-    let full_url = "https://www.mvg.de/.rest/zdm/stations";
+    if let Ok(file) = File::open("stations.json") {
+        let stations = serde_json::from_reader(file)?; //it inferres the type from the function return type and automatically deserializes it
+        return Ok(stations);
+    } else {
+        let full_url = "https://www.mvg.de/.rest/zdm/stations";
 
-    let resp = reqwest::get(full_url).await?.json::<Vec<Station>>().await?;
-    // println!("{:#?}", resp[0]);
-    // return Ok(resp[0].clone());
-    Ok(resp)
+        let resp = reqwest::get(full_url).await?;
+
+        let stations = resp.json::<Vec<Station>>().await?;
+        match save_response_to_json_file(stations.clone()).await {
+            Ok(_) => println!("saved stations to file"),
+            Err(_) => println!("failed to save stations to file"),
+        }
+        return Ok(stations);
+    }
+}
+
+async fn save_response_to_json_file(station_response: Vec<Station>) -> Result<()> {
+    let json = serde_json::to_string_pretty(&station_response)?;
+    std::fs::write("stations.json", json)?; //stores this file in the root directory
+
+    Ok(())
 }
