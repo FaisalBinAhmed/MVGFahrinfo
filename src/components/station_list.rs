@@ -95,14 +95,14 @@ pub fn display_departures_table(departures: &Vec<api::DepartureInfo>) -> Table {
             )),
         ];
         return Row::new(cells).height(1);
-        // .style(Style::default().fg(Color::White));
+        // .style(Style::default().fg(Color::White)); // no effect
     });
 
     let t = Table::new(rows)
         .header(header)
         // .highlight_style(Style::default().fg(Color::Yellow))
-        .highlight_symbol(">> ")
-        // .style(Style::default().bg(Color::Black).bg(Color::Black))
+        // .highlight_symbol(">> ")
+        .style(Style::default().fg(Color::White))
         .widths(&[
             Constraint::Percentage(10),
             Constraint::Max(60),

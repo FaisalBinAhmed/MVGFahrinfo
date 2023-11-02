@@ -117,6 +117,13 @@ pub fn render(app: &mut App, f: &mut Frame) {
         let area = static_widgets::centered_rect(69, 50, f.size());
         f.render_widget(Clear, area); //this clears out the background
         f.render_widget(input_field, area);
+        f.set_cursor(
+            // Draw the cursor at the current position in the input field.
+            // This position is can be controlled via the left and right arrow key
+            area.x + app.cursor_position as u16 + 1,
+            // Move one line down, from the border to the input line
+            area.y + 1,
+        )
     }
 }
 
@@ -130,7 +137,7 @@ fn draw_departures(f: &mut Frame<'_>, app: &App) {
         .title(popup_title)
         .borders(Borders::ALL)
         .padding(Padding::new(2, 2, 1, 1))
-        .style(Style::default().fg(Color::LightCyan));
+        .style(Style::default());
 
     // let list = display_departures(&app.departures).block(block);
     let table = display_departures_table(&app.departures).block(block);
