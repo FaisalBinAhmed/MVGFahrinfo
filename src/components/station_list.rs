@@ -6,7 +6,10 @@ use ratatui::{
     widgets::{Cell, List, ListItem, Row, Table},
 };
 
-use crate::{api, App};
+use crate::{
+    api::{self, Station},
+    App,
+};
 
 pub fn get_station_list_widget(app: &App) -> List {
     return List::new(
@@ -192,4 +195,35 @@ fn get_minutes(time: i64) -> i64 {
     let diff = future_time.signed_duration_since(now); //now.signed_duration_since(future_time);
 
     return diff.num_minutes();
+}
+
+// search suggestions
+
+pub fn get_suggested_station_list(app: &mut App) -> List {
+    let mut suggested_stations: Vec<Station> = vec![];
+
+    let suggested_stations_list = app
+        .stations
+        .iter()
+        .filter(|station| {
+            station
+                .name
+                .to_lowercase()
+                .contains(&app.query.to_lowercase())
+        })
+        .map(|station| {
+            suggested_stations.push(station.clone());
+            return ListItem::new(vec![Line::from(vec![
+                Span::styled(format!("{}", station.name), Style::default()),
+                Span::styled(
+                    format!(" ({})", station.tariff_zones),
+                    Style::default().fg(Color::LightCyan),
+                ),
+            ])]);
+        })
+        .collect::<Vec<ListItem>>();
+
+    app.suggested_stations = suggested_stations;
+
+    return List::new(suggested_stations_list);
 }

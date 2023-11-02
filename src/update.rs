@@ -43,7 +43,7 @@ pub async fn update(app: &mut App, key_event: KeyEvent) {
         },
         AppMode::Search => match key_event.code {
             KeyCode::Enter => {
-                app.submit();
+                app.select_searched_station().await;
                 app.should_redraw = true;
             }
             KeyCode::Char(to_insert) => {
@@ -52,6 +52,14 @@ pub async fn update(app: &mut App, key_event: KeyEvent) {
             }
             KeyCode::Backspace => {
                 app.delete_char();
+                app.should_redraw = true;
+            }
+            KeyCode::Down => {
+                app.scroll_down();
+                app.should_redraw = true;
+            }
+            KeyCode::Up => {
+                app.scroll_up();
                 app.should_redraw = true;
             }
             KeyCode::Left => {

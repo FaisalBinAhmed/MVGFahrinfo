@@ -30,6 +30,8 @@ pub struct App {
     pub app_mode: AppMode,
     pub query: String,
     pub cursor_position: usize,
+    pub suggested_stations: Vec<api::Station>,
+    pub search_scroll_state: ListState,
 }
 
 impl App {
@@ -47,6 +49,8 @@ impl App {
             app_mode: AppMode::Normal,
             query: String::new(),
             cursor_position: 0,
+            search_scroll_state: ListState::default(),
+            suggested_stations: vec![],
         }
     }
     pub fn quit(&mut self) {
@@ -158,11 +162,46 @@ impl App {
         self.cursor_position = 0;
     }
 
-    pub fn submit(&mut self) {
-        // self.messages.push(self.input.clone());
+    //search result related
 
-        //select the station and perform other actions
+    pub fn scroll_down(&mut self) {
+        let i = match self.search_scroll_state.selected() {
+            Some(i) => {
+                if i >= self.suggested_stations.len() - 1 {
+                    0
+                } else {
+                    i + 1
+                }
+            }
+            None => 0,
+        };
+        self.search_scroll_state.select(Some(i));
+    }
 
+    pub fn scroll_up(&mut self) {
+        let i = match self.search_scroll_state.selected() {
+            Some(i) => {
+                if i == 0 {
+                    self.suggested_stations.len() - 1
+                } else {
+                    i - 1
+                }
+            }
+            None => 0,
+        };
+        self.search_scroll_state.select(Some(i));
+    }
+
+    pub async fn select_searched_station(&mut self) {
+        self.selected_station = match self.search_scroll_state.selected() {
+            Some(i) => Some(self.suggested_stations[i].clone()),
+            None => None,
+        };
+        self.status = format!("Fetching departures from search");
+        self.suggested_stations.clear();
+        self.update_departures().await;
+        self.selected_tab = AppTabs::HomeTab;
+        self.app_mode = AppMode::Normal;
         self.query.clear();
         self.reset_cursor();
     }

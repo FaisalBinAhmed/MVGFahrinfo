@@ -2,12 +2,15 @@ use ratatui::{
     prelude::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Clear, Padding, Paragraph, Tabs},
+    widgets::{Block, Borders, Clear, List, ListItem, Padding, Paragraph, Tabs},
 };
 
 use crate::{
     app::{App, AppTabs},
-    components::{self, static_widgets, station_list::display_departures_table},
+    components::{
+        self, static_widgets,
+        station_list::{display_departures_table, get_suggested_station_list},
+    },
     tui::Frame,
 };
 
@@ -95,6 +98,7 @@ pub fn render(app: &mut App, f: &mut Frame) {
     f.render_widget(Paragraph::new(status_bar), chunks[2]);
 
     //SEARCH MODAL
+    //todo: move to its own component
 
     if app.app_mode == crate::app::AppMode::Search {
         let popup_title = " ⌕ Search for a station ";
@@ -102,28 +106,40 @@ pub fn render(app: &mut App, f: &mut Frame) {
         let mut text = Text::from(Line::from(app.query.clone()));
         text.patch_style(Style::default().add_modifier(Modifier::RAPID_BLINK));
 
-        // let block = Block::default()
-        //     .title(popup_title)
-        //     .borders(Borders::ALL)
-        //     .padding(Padding::new(2, 2, 1, 1))
-        //     .style(Style::default().fg(Color::Yellow));
-
         let input_field = Paragraph::new(text)
             .block(Block::default().borders(Borders::ALL).title(popup_title))
             .style(Style::default().fg(Color::LightCyan))
             .alignment(ratatui::prelude::Alignment::Left);
         // .block(block);
 
-        let area = static_widgets::centered_rect(69, 50, f.size());
+        let area = static_widgets::centered_rect(69, 50, f.size()); //size of the MODAL
+
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(3), Constraint::Min(0)])
+            .split(area);
+
         f.render_widget(Clear, area); //this clears out the background
-        f.render_widget(input_field, area);
+        f.render_widget(input_field, chunks[0]);
         f.set_cursor(
             // Draw the cursor at the current position in the input field.
             // This position is can be controlled via the left and right arrow key
-            area.x + app.cursor_position as u16 + 1,
+            chunks[0].x + app.cursor_position as u16 + 1,
             // Move one line down, from the border to the input line
-            area.y + 1,
-        )
+            chunks[0].y + 1,
+        );
+
+        //search suggestion section
+
+        let search_scroll_state = &mut app.search_scroll_state.clone();
+        let suggested_stations = get_suggested_station_list(app).highlight_style(
+            Style::default()
+                .bg(Color::Rgb(38, 35, 53))
+                .add_modifier(Modifier::BOLD),
+        );
+
+        f.render_stateful_widget(suggested_stations, chunks[1], search_scroll_state);
+        // f.render_widget(suggested_stations, chunks[1]);
     }
 }
 
