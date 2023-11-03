@@ -82,7 +82,9 @@ pub fn render(app: &mut App, f: &mut Frame) {
             vec![
                 Span::styled(format!(" SEARCH "), Style::default().bg(Color::Red).bold()),
                 Span::styled(
-                    format!(" Esc: back to normal mode. enter: select station. "),
+                    format!(
+                        " Esc: back to normal mode. Up/Down: navigate. Enter: select station. "
+                    ),
                     Style::default(),
                 ),
             ]
