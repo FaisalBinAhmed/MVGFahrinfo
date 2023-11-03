@@ -8,6 +8,7 @@ use crate::{
     event::Event,
 };
 
+//todo: should_redraw refactor
 pub async fn update(app: &mut App, key_event: KeyEvent) {
     match app.app_mode {
         AppMode::Normal => match key_event.code {
@@ -42,7 +43,7 @@ pub async fn update(app: &mut App, key_event: KeyEvent) {
                 }
             }
             _ => {
-                // todo: pass the key event
+                // todo: pass the key event?
             }
         },
         AppMode::Search => match key_event.code {

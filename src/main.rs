@@ -4,6 +4,7 @@ use anyhow::Result; //to avoid writing the error type <Box dyn Error> everywhere
 pub mod api;
 pub mod app;
 pub mod components;
+pub mod constants;
 pub mod event;
 pub mod tui;
 pub mod ui;
