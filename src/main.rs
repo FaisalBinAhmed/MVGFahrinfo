@@ -23,15 +23,23 @@ pub type Frame<'a> = ratatui::Frame<'a, CrosstermBackend<std::io::Stderr>>; // a
 #[tokio::main]
 async fn main() -> Result<()> {
     println!("fetching stations...");
-    let mut app = App::new().await;
 
     let backend = CrosstermBackend::new(std::io::stderr());
     let terminal = Terminal::new(backend)?;
     let events = EventHandler::new(250);
+
+    let sender = events.sender.clone();
+
+    let mut app = App::new().await;
+
+    app.initiate_auto_refresh(sender);
+
     let mut tui = Tui::new(terminal, events);
     tui.enter()?;
 
     while !app.should_quit {
+        // let sender = sender.clone();
+
         if app.should_redraw {
             tui.draw(&mut app)?;
             app.should_redraw = false;
@@ -42,6 +50,7 @@ async fn main() -> Result<()> {
             Event::Key(key_event) => update(&mut app, key_event).await,
         };
     }
+
     tui.exit()?;
     return Ok(());
 }

@@ -1,6 +1,9 @@
+use std::sync::mpsc;
+
+use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::widgets::ListState;
 
-use crate::api;
+use crate::{api, event::Event};
 
 #[derive(PartialEq)] // need this to do binary comparison
 pub enum AppTabs {
@@ -32,6 +35,18 @@ pub struct App {
     pub cursor_position: usize,
     pub suggested_stations: Vec<api::Station>,
     pub search_scroll_state: ListState,
+}
+
+impl App {
+    pub fn initiate_auto_refresh(&self, sender: mpsc::Sender<Event>) {
+        tokio::spawn(async move {
+            loop {
+                tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+                // println!("sending refresh event");
+                let _ = sender.send(Event::Key(KeyEvent::from(KeyCode::Char('r'))));
+            }
+        });
+    }
 }
 
 impl App {

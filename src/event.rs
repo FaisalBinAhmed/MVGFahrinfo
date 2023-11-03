@@ -16,7 +16,7 @@ pub enum Event {
 
 #[derive(Debug)]
 pub struct EventHandler {
-    sender: mpsc::Sender<Event>,
+    pub sender: mpsc::Sender<Event>,
     receiver: mpsc::Receiver<Event>,
     handler: thread::JoinHandle<()>,
 }
