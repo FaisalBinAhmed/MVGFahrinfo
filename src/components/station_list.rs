@@ -214,7 +214,7 @@ fn get_vehicle_label<'a>(label: &'a str, transport_type: &str) -> Line<'a> {
             Span::raw(" "),
             Span::styled(
                 format!(" {} ", label),
-                Style::default().bg(get_sbahn_color(label)).fg(Color::Black),
+                Style::default().bg(get_sbahn_color(label)).fg(Color::White),
             ),
         ],
         // .bold(),
