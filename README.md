@@ -56,7 +56,7 @@ This is a binary crate and not a library, so you shouldn't use it as a dependenc
 
 ## Credits
 
-- [MVG](mvg.de) for the API.
+- [MVG](https://mvg.de) for the API.
 - Ratatui for the beautiful terminal interface framework.
 
 ## License
