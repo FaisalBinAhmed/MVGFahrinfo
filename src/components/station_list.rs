@@ -3,7 +3,7 @@ use ratatui::{
     prelude::Constraint,
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Cell, List, ListItem, ListState, Row, Table},
+    widgets::{Cell, List, ListItem, Row, Table},
 };
 
 use crate::{
@@ -194,6 +194,7 @@ fn get_minutes(time: i64) -> i64 {
     let future_time = chrono::DateTime::from_timestamp(timestamp_in_seconds, 0).unwrap();
     let diff = future_time.signed_duration_since(now); //now.signed_duration_since(future_time);
 
+    //todo: handle negative values like - 10000 min
     return diff.num_minutes();
 }
 

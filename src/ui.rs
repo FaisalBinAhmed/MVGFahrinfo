@@ -75,7 +75,7 @@ pub fn render(app: &mut App, f: &mut Frame) {
             format!(" Q: close app. Tab: switch tabs. Enter: select station. R: reload departures. S: search. "),
             Style::default()),
           Span::styled(
-            format!(" ({})", &app.status),
+            format!("last refreshed: {}", &app.last_refreshed),
             Style::default().fg(Color::LightCyan))]
         }
         crate::app::AppMode::Search => {
@@ -86,7 +86,7 @@ pub fn render(app: &mut App, f: &mut Frame) {
                     Style::default(),
                 ),
                 Span::styled(
-                    format!("({})", &app.status),
+                    format!("last refreshed: {}", &app.last_refreshed),
                     Style::default().fg(Color::LightCyan),
                 ),
             ]

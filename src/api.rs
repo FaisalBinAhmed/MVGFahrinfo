@@ -102,6 +102,7 @@ pub struct Station {
 // todo: we need a way to manually refrest this file
 pub async fn get_stations() -> Result<Vec<Station>> {
     if let Ok(file) = File::open("stations.json") {
+        //todo: handle the error propagation here, it should fetch from api instead
         let stations = serde_json::from_reader(file)?; //it inferres the type from the function return type and automatically deserializes it
         return Ok(stations);
     } else {

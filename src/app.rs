@@ -24,10 +24,9 @@ pub struct App {
     pub selected_station: Option<api::Station>,
     pub departures: Vec<api::DepartureInfo>,
     pub should_redraw: bool,
-    // auto_refresh: bool,
     pub status: String,
+    pub last_refreshed: String,
     //scroll related
-    // pub scroll_position: usize,
     pub scroll_state: ListState,
     //search related
     pub app_mode: AppMode,
@@ -38,6 +37,9 @@ pub struct App {
 }
 
 impl App {
+    // this lets us mutate the app state without having to pass a mutable reference and blocking the main ui/event thread or having to use a mutex
+    // we simulate the refresh command by sending a key event to the event handler
+    // the event handler has a mutable reference to the app and can mutate it
     pub fn initiate_auto_refresh(&self, sender: mpsc::Sender<Event>) {
         tokio::spawn(async move {
             loop {
@@ -46,6 +48,10 @@ impl App {
                 let _ = sender.send(Event::Key(KeyEvent::from(KeyCode::Char('r'))));
             }
         });
+    }
+    fn update_last_refreshed(&mut self) {
+        let time_now = chrono::Local::now();
+        self.last_refreshed = format!("{}", time_now.format("%H:%M:%S"));
     }
 }
 
@@ -58,8 +64,8 @@ impl App {
             selected_station: None,
             departures: vec![],
             should_redraw: true,
-            // auto_refresh: false,
             status: "Loading stations...".to_string(),
+            last_refreshed: " ".to_string(),
             scroll_state: ListState::default(),
             app_mode: AppMode::Normal,
             query: String::new(),
@@ -108,9 +114,12 @@ impl App {
     pub async fn update_departures(&mut self) {
         if let Some(station) = &self.selected_station {
             self.departures = match api::get_departures(&station.id).await {
-                Ok(departures) => departures,
-                Err(e) => {
-                    println!("Error fetching departures {}", e);
+                Ok(departures) => {
+                    self.update_last_refreshed();
+                    departures
+                }
+                Err(_e) => {
+                    // println!("Error fetching departures {}", e);
                     vec![]
                 }
             }
@@ -152,6 +161,7 @@ impl App {
         //should also commence the search
     }
 
+    //boilerplate code from the ratatui book
     pub fn delete_char(&mut self) {
         let is_not_cursor_leftmost = self.cursor_position != 0;
         if is_not_cursor_leftmost {

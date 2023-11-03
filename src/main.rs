@@ -1,5 +1,5 @@
 #[allow(unused, dead_code)]
-use anyhow::Result; //to avoid writing the error type
+use anyhow::Result; //to avoid writing the error type <Box dyn Error> everywhere
 
 pub mod api;
 pub mod app;
@@ -28,7 +28,7 @@ async fn main() -> Result<()> {
     let terminal = Terminal::new(backend)?;
     let events = EventHandler::new(250);
 
-    let sender = events.sender.clone();
+    let sender = events.sender.clone(); //we can clone it as we can have multiple senders for this channel
 
     let mut app = App::new().await;
 
@@ -38,15 +38,14 @@ async fn main() -> Result<()> {
     tui.enter()?;
 
     while !app.should_quit {
-        // let sender = sender.clone();
-
         if app.should_redraw {
+            //this makes sure that we don't redraw the screen if there is no change
             tui.draw(&mut app)?;
             app.should_redraw = false;
         }
 
         match tui.events.next()? {
-            Event::Tick => {}
+            Event::Tick => {} //every 250ms we get a tick event, we ignore it
             Event::Key(key_event) => update(&mut app, key_event).await,
         };
     }

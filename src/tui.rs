@@ -16,6 +16,8 @@ pub struct Tui {
     pub events: EventHandler,
 }
 
+// boilerplate code from the ratatui book
+
 impl Tui {
     pub fn new(terminal: CrosstermTerminal, events: EventHandler) -> Self {
         Self { terminal, events } //setting own fields and returning an instance of the struct

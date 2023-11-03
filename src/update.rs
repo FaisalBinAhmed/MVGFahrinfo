@@ -17,12 +17,10 @@ pub async fn update(app: &mut App, key_event: KeyEvent) {
             }
             KeyCode::Down => {
                 app.increment_station();
-
                 app.should_redraw = true;
             }
             KeyCode::Up => {
                 app.decrement_station();
-
                 app.should_redraw = true;
             }
             KeyCode::Enter => {
@@ -43,6 +41,12 @@ pub async fn update(app: &mut App, key_event: KeyEvent) {
             }
         },
         AppMode::Search => match key_event.code {
+            KeyCode::Char('q') => app.quit(), //this is duplicated code, we can refactor it later
+            KeyCode::Char('c') | KeyCode::Char('C') => {
+                if key_event.modifiers == KeyModifiers::CONTROL {
+                    app.quit()
+                }
+            }
             KeyCode::Enter => {
                 app.select_searched_station().await;
                 app.should_redraw = true;
