@@ -13,6 +13,7 @@ It features:
 - Searching of stations.
 - Saving stations to file.
 - Real-life colors for vehicles for easier identification.
+- Easily navigable with shortcuts.
 
 ## Using
 
@@ -24,6 +25,6 @@ The app will stay open in your terminal and will refresh the departures every 60
 
 ## Screenshots
 
-![Screenshot 1](https://imgur.com/jsHDPsd.png)
-![Screenshot 2](https://imgur.com/8hVONcX.png)
-![Screenshot 3](https://imgur.com/7d4Xk6Q.png)
+![Current Departures in Munich Hauptbahnhof](https://imgur.com/jsHDPsd.png)
+![All station list](https://imgur.com/8hVONcX.png)
+![Station search](https://imgur.com/7d4Xk6Q.png)
