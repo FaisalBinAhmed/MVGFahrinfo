@@ -24,6 +24,6 @@ The app will stay open in your terminal and will refresh the departures every 60
 
 ## Screenshots
 
-![Screenshot 1](https://imgur.com/jsHDPsd)
-![Screenshot 2](https://imgur.com/8hVONcX)
-![Screenshot 3](https://imgur.com/7d4Xk6Q)
+![Screenshot 1](https://imgur.com/jsHDPsd.png)
+![Screenshot 2](https://imgur.com/8hVONcX.png)
+![Screenshot 3](https://imgur.com/7d4Xk6Q.png)
