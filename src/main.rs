@@ -1,4 +1,4 @@
-#[allow(unused, dead_code)]
+// #[allow(unused, dead_code)]
 use anyhow::Result; //to avoid writing the error type <Box dyn Error> everywhere
 
 pub mod api;
@@ -18,6 +18,8 @@ use update::update;
 
 use ratatui::prelude::{CrosstermBackend, Terminal};
 
+use crate::update::initiate_auto_refresh;
+
 pub type Frame<'a> = ratatui::Frame<'a, CrosstermBackend<std::io::Stderr>>; // alias for the frame type
 
 #[tokio::main]
@@ -32,7 +34,7 @@ async fn main() -> Result<()> {
 
     let mut app = App::new().await;
 
-    app.initiate_auto_refresh(sender);
+    initiate_auto_refresh(sender);
 
     let mut tui = Tui::new(terminal, events);
     tui.enter()?;

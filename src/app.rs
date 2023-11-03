@@ -37,25 +37,6 @@ pub struct App {
 }
 
 impl App {
-    // this lets us mutate the app state without having to pass a mutable reference and blocking the main ui/event thread or having to use a mutex
-    // we simulate the refresh command by sending a key event to the event handler
-    // the event handler has a mutable reference to the app and can mutate it
-    pub fn initiate_auto_refresh(&self, sender: mpsc::Sender<Event>) {
-        tokio::spawn(async move {
-            loop {
-                tokio::time::sleep(std::time::Duration::from_secs(60)).await;
-                // println!("sending refresh event");
-                let _ = sender.send(Event::Key(KeyEvent::from(KeyCode::Char('r'))));
-            }
-        });
-    }
-    fn update_last_refreshed(&mut self) {
-        let time_now = chrono::Local::now();
-        self.last_refreshed = format!("{}", time_now.format("%H:%M:%S"));
-    }
-}
-
-impl App {
     pub async fn new() -> Self {
         Self {
             selected_tab: AppTabs::HomeTab,
@@ -124,6 +105,11 @@ impl App {
                 }
             }
         }
+    }
+
+    fn update_last_refreshed(&mut self) {
+        let time_now = chrono::Local::now();
+        self.last_refreshed = format!("{}", time_now.format("%H:%M:%S"));
     }
 
     pub async fn select_station(&mut self) {
