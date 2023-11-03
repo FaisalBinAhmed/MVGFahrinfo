@@ -1,9 +1,6 @@
-use std::sync::mpsc;
-
-use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::widgets::ListState;
 
-use crate::{api, event::Event};
+use crate::api;
 
 #[derive(PartialEq)] // need this to do binary comparison
 pub enum AppTabs {
