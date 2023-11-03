@@ -18,8 +18,7 @@ keywords = [
 	"munich",
     "public-transport",
     "mvg",
-    "ubahn",
-    "sbahn",
+    "ubahn"
 ]
 categories = ["command-line-interface"]
 license = "MIT"
