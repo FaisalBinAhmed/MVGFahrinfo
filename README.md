@@ -27,8 +27,10 @@ To exit the app, press `q` or `Ctrl+C`.
 
 ## Installing
 
-To run it globally, you can install the app with `cargo binstall mvgfahrinfo`. Make sure you have `binstall` installed.
+To run it globally, you can install the app with `cargo binstall mvgfahrinfo`. Make sure you have `binstall` [binstall repo](https://github.com/cargo-bins/cargo-binstall) installed. Once installed, you can invoke the app just by running `mvgfahrinfo` in the terminal.
 This is a binary crate and not a library, so you shouldn't use it as a dependency.
+
+I might provide some pre-built binaries for Windows/MacOS/Linux in the future. :)
 
 ## Shortcuts
 
