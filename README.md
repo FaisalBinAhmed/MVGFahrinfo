@@ -13,7 +13,7 @@ It features:
 - Searching of stations.
 - Saving stations to file.
 - Real-life colors for vehicles for easier identification.
-- Easily navigable with shortcuts.
+- Easy navigation with shortcuts.
 
 ## Using
 
@@ -53,7 +53,7 @@ I might provide some pre-built binaries for Windows/MacOS/Linux in the future. :
 ## Screenshots
 
 ![Current Departures in Munich Hauptbahnhof](https://imgur.com/jsHDPsd.png)
-![All station list](https://imgur.com/8hVONcX.png)
+![All stations list](https://imgur.com/8hVONcX.png)
 ![Station search](https://imgur.com/7d4Xk6Q.png)
 
 ## Credits
