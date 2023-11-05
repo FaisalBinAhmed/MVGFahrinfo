@@ -8,7 +8,7 @@ pub async fn fetch_station_ids() -> Result<Vec<String>> {
 
     let stations = reqwest::get(full_url).await?.json::<Vec<String>>().await?;
     // println!("{:#?}", stations);
-    return Ok(stations);
+    Ok(stations)
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -104,7 +104,7 @@ pub async fn get_stations() -> Result<Vec<Station>> {
     if let Ok(file) = File::open("stations.json") {
         //todo: handle the error propagation here, it should fetch from api instead
         let stations = serde_json::from_reader(file)?; //it inferres the type from the function return type and automatically deserializes it
-        return Ok(stations);
+        Ok(stations)
     } else {
         let full_url = "https://www.mvg.de/.rest/zdm/stations";
 
@@ -115,7 +115,7 @@ pub async fn get_stations() -> Result<Vec<Station>> {
             Ok(_) => println!("saved stations to file"),
             Err(_) => println!("failed to save stations to file"),
         }
-        return Ok(stations);
+        Ok(stations)
     }
 }
 
