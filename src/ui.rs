@@ -28,8 +28,8 @@ pub fn render(app: &mut App, f: &mut Frame) {
     let block = Block::default();
     f.render_widget(block, size);
 
-    let tab_names = vec!["Departures", "Station List"];
-    let titles = tab_names
+    // let tab_names = ["Departures", "Station List"];
+    let titles = ["Departures", "Station List"]
         .iter()
         .map(|t| {
             Line::from(Span::styled(

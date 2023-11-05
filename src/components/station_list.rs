@@ -68,7 +68,7 @@ fn get_type_icon(product: &str) -> Span {
             Style::default().bg(Color::LightYellow).fg(Color::Black),
         ),
     };
-    return icon;
+    icon
 }
 
 fn get_product_icon_spans(products: &Vec<String>) -> Vec<Span> {
@@ -78,10 +78,10 @@ fn get_product_icon_spans(products: &Vec<String>) -> Vec<Span> {
         spans.push(icon);
         spans.push(Span::raw(" ")); // add a space between the icons
     }
-    return spans;
+    spans
 }
 
-pub fn display_departures_table(departures: &Vec<api::DepartureInfo>) -> Table {
+pub fn display_departures_table(departures: &[api::DepartureInfo]) -> Table {
     let header_cells = ["Vehicle", "Direction", "Platform", "ETA"]
         .iter()
         .map(|h| Cell::from(*h).style(Style::default().fg(Color::Gray)));
@@ -98,10 +98,7 @@ pub fn display_departures_table(departures: &Vec<api::DepartureInfo>) -> Table {
             Cell::from(get_vehicle_label(&item.label, &item.transport_type)),
             Cell::from(format!("{}", item.destination)),
             Cell::from(get_platform_number(item.platform, index)),
-            Cell::from(format!(
-                "{} min",
-                get_minutes(item.realtime_departure_time.clone())
-            )),
+            Cell::from(format!("{} min", get_minutes(item.realtime_departure_time))),
         ];
         return Row::new(cells).height(1);
         // .style(Style::default().fg(Color::White)); // no effect
@@ -118,7 +115,7 @@ pub fn display_departures_table(departures: &Vec<api::DepartureInfo>) -> Table {
             Constraint::Percentage(20),
             Constraint::Min(10),
         ]);
-    return t;
+    t
 }
 
 // pub fn display_departures(departures: &Vec<api::DepartureInfo>) -> List {
@@ -223,7 +220,7 @@ fn get_vehicle_label<'a>(label: &'a str, transport_type: &str) -> Line<'a> {
             Style::default().bg(Color::LightYellow).fg(Color::Black),
         )],
     };
-    return Line::from(icon);
+    Line::from(icon)
 }
 
 fn get_minutes(time: i64) -> i64 {
@@ -233,7 +230,7 @@ fn get_minutes(time: i64) -> i64 {
     let diff = future_time.signed_duration_since(now); //now.signed_duration_since(future_time);
 
     //todo: handle negative values like - 10000 min
-    return diff.num_minutes();
+    diff.num_minutes()
 }
 
 // search suggestions
