@@ -9,7 +9,7 @@ It features:
 
 - Very low resource usage.
 - Beautiful terminal interface.
-- Automatic refreshing of deartures.
+- Automatic refreshing of departures.
 - Searching of stations.
 - Saving stations to file.
 - Real-life colors for vehicles for easier identification.
