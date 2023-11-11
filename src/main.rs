@@ -1,4 +1,3 @@
-// #[allow(unused, dead_code)]
 use anyhow::Result; //to avoid writing the error type <Box dyn Error> everywhere
 
 pub mod api;
@@ -47,7 +46,7 @@ async fn main() -> Result<()> {
             app.should_redraw = false;
         }
 
-        match tui.events.next()? {
+        match tui.events.next().await? {
             Event::Tick => {} //every 250ms we get a tick event, we ignore it
             Event::Key(key_event) => update(&mut app, key_event).await,
         };

@@ -11,7 +11,7 @@ use crate::{
     constants::{get_sbahn_color, get_ubahn_color},
     App,
 };
-
+// this is used in the Station List tab
 pub fn get_station_list_widget(app: &App) -> List {
     return List::new(
         app.stations
@@ -32,7 +32,7 @@ pub fn get_station_list_widget(app: &App) -> List {
     )
     .highlight_style(
         Style::default()
-            .bg(Color::Rgb(38, 35, 53))
+            .bg(Color::Rgb(38, 35, 38))
             .add_modifier(Modifier::BOLD),
     );
     // .highlight_symbol(">> ");
@@ -98,16 +98,16 @@ pub fn display_departures_table(departures: &[api::DepartureInfo]) -> Table {
             Cell::from(get_vehicle_label(&item.label, &item.transport_type)),
             Cell::from(format!("{}", item.destination)),
             Cell::from(get_platform_number(item.platform, index)),
-            Cell::from(format!("{} min", get_minutes(item.realtime_departure_time))),
+            Cell::from(match get_minutes(item.realtime_departure_time) {
+                ETA::Minutes(minutes) => format!("{} min", minutes),
+                ETA::Now => "now".to_string(),
+            }),
         ];
         return Row::new(cells).height(1);
-        // .style(Style::default().fg(Color::White)); // no effect
     });
 
     let t = Table::new(rows)
         .header(header)
-        // .highlight_style(Style::default().fg(Color::Yellow))
-        // .highlight_symbol(">> ")
         .style(Style::default().fg(Color::White))
         .widths(&[
             Constraint::Percentage(20),
@@ -117,34 +117,6 @@ pub fn display_departures_table(departures: &[api::DepartureInfo]) -> Table {
         ]);
     t
 }
-
-// pub fn display_departures(departures: &Vec<api::DepartureInfo>) -> List {
-//     return List::new(
-//         departures
-//             .iter()
-//             .enumerate()
-//             .map(|(_index, departure)| {
-//                 ListItem::new(vec![
-//                     Line::from(vec![
-//                         get_vehicle_label(&departure.label, &departure.transport_type),
-//                         Span::styled(
-//                             format!(" {}", departure.destination),
-//                             Style::default().fg(Color::LightCyan),
-//                         ),
-//                         Span::styled(
-//                             format!(
-//                                 " ({}) min",
-//                                 get_minutes(departure.realtime_departure_time.clone())
-//                             ),
-//                             Style::default().fg(Color::White),
-//                         ),
-//                     ]),
-//                     // Line::from(get_product_icon_spans(&station.products)),
-//                 ])
-//             })
-//             .collect::<Vec<ListItem>>(),
-//     );
-// }
 
 fn get_platform_number<'a>(platform: Option<i64>, index: usize) -> Span<'a> {
     let bg = if index % 2 == 0 {
@@ -223,14 +195,26 @@ fn get_vehicle_label<'a>(label: &'a str, transport_type: &str) -> Line<'a> {
     Line::from(icon)
 }
 
-fn get_minutes(time: i64) -> i64 {
+// sometimes, the departure time is negative
+// in that case, we return a string instead of a number. This is a temporary fix though
+enum ETA {
+    Minutes(i64),
+    Now, // it might also be depaurtures that are late and come in any moment. Needs more investigation
+}
+
+fn get_minutes(time: i64) -> ETA {
     let now = Utc::now();
     let timestamp_in_seconds = time / 1000;
     let future_time = chrono::DateTime::from_timestamp(timestamp_in_seconds, 0).unwrap();
     let diff = future_time.signed_duration_since(now); //now.signed_duration_since(future_time);
 
-    //todo: handle negative values like - 10000 min
-    diff.num_minutes()
+    let minutes = diff.num_minutes();
+
+    if minutes < 1 {
+        return ETA::Now;
+    } else {
+        return ETA::Minutes(minutes);
+    }
 }
 
 // search suggestions
@@ -242,10 +226,11 @@ pub fn get_suggested_station_list(app: &mut App) -> List {
         .stations
         .iter()
         .filter(|station| {
+            // todo: move to filter_map
             station
                 .name
-                .to_lowercase()
-                .contains(&app.query.to_lowercase())
+                .to_ascii_lowercase()
+                .contains(&app.query.to_ascii_lowercase())
         })
         .map(|station| {
             suggested_stations.push(station.clone());
