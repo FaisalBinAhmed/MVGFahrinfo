@@ -98,7 +98,10 @@ pub fn display_departures_table(departures: &[api::DepartureInfo]) -> Table {
             Cell::from(get_vehicle_label(&item.label, &item.transport_type)),
             Cell::from(format!("{}", item.destination)),
             Cell::from(get_platform_number(item.platform, index)),
-            Cell::from(format!("{} min", get_minutes(item.realtime_departure_time))),
+            Cell::from(match get_minutes(item.realtime_departure_time) {
+                ETA::Minutes(minutes) => format!("{} min", minutes),
+                ETA::Now => "now".to_string(),
+            }),
         ];
         return Row::new(cells).height(1);
         // .style(Style::default().fg(Color::White)); // no effect
@@ -223,14 +226,26 @@ fn get_vehicle_label<'a>(label: &'a str, transport_type: &str) -> Line<'a> {
     Line::from(icon)
 }
 
-fn get_minutes(time: i64) -> i64 {
+// sometimes, the departure time is negative
+// in that case, we return a string instead of a number. This is a temporary fix though
+enum ETA {
+    Minutes(i64),
+    Now, // it might also be depaurtures that are late and come in any moment. Needs more investigation
+}
+
+fn get_minutes(time: i64) -> ETA {
     let now = Utc::now();
     let timestamp_in_seconds = time / 1000;
     let future_time = chrono::DateTime::from_timestamp(timestamp_in_seconds, 0).unwrap();
     let diff = future_time.signed_duration_since(now); //now.signed_duration_since(future_time);
 
-    //todo: handle negative values like - 10000 min
-    diff.num_minutes()
+    let minutes = diff.num_minutes();
+
+    if minutes < 1 {
+        return ETA::Now;
+    } else {
+        return ETA::Minutes(minutes);
+    }
 }
 
 // search suggestions
@@ -242,6 +257,7 @@ pub fn get_suggested_station_list(app: &mut App) -> List {
         .stations
         .iter()
         .filter(|station| {
+            // todo: move to filter_map
             station
                 .name
                 .to_ascii_lowercase()
