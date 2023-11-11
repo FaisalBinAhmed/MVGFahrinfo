@@ -1,7 +1,7 @@
 [package]
 name = "mvgfahrinfo"
 description = "Get up-to-date departure times for Munich public transport in your terminal."
-version = "1.0.1"
+version = "1.0.5"
 edition = "2021"
 
 author = "Faisal Ahmed"
