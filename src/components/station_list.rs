@@ -11,7 +11,7 @@ use crate::{
     constants::{get_sbahn_color, get_ubahn_color},
     App,
 };
-
+// this is used in the Station List tab
 pub fn get_station_list_widget(app: &App) -> List {
     return List::new(
         app.stations
@@ -32,7 +32,7 @@ pub fn get_station_list_widget(app: &App) -> List {
     )
     .highlight_style(
         Style::default()
-            .bg(Color::Rgb(38, 35, 53))
+            .bg(Color::Rgb(38, 35, 38))
             .add_modifier(Modifier::BOLD),
     );
     // .highlight_symbol(">> ");
@@ -104,13 +104,10 @@ pub fn display_departures_table(departures: &[api::DepartureInfo]) -> Table {
             }),
         ];
         return Row::new(cells).height(1);
-        // .style(Style::default().fg(Color::White)); // no effect
     });
 
     let t = Table::new(rows)
         .header(header)
-        // .highlight_style(Style::default().fg(Color::Yellow))
-        // .highlight_symbol(">> ")
         .style(Style::default().fg(Color::White))
         .widths(&[
             Constraint::Percentage(20),
@@ -120,34 +117,6 @@ pub fn display_departures_table(departures: &[api::DepartureInfo]) -> Table {
         ]);
     t
 }
-
-// pub fn display_departures(departures: &Vec<api::DepartureInfo>) -> List {
-//     return List::new(
-//         departures
-//             .iter()
-//             .enumerate()
-//             .map(|(_index, departure)| {
-//                 ListItem::new(vec![
-//                     Line::from(vec![
-//                         get_vehicle_label(&departure.label, &departure.transport_type),
-//                         Span::styled(
-//                             format!(" {}", departure.destination),
-//                             Style::default().fg(Color::LightCyan),
-//                         ),
-//                         Span::styled(
-//                             format!(
-//                                 " ({}) min",
-//                                 get_minutes(departure.realtime_departure_time.clone())
-//                             ),
-//                             Style::default().fg(Color::White),
-//                         ),
-//                     ]),
-//                     // Line::from(get_product_icon_spans(&station.products)),
-//                 ])
-//             })
-//             .collect::<Vec<ListItem>>(),
-//     );
-// }
 
 fn get_platform_number<'a>(platform: Option<i64>, index: usize) -> Span<'a> {
     let bg = if index % 2 == 0 {
