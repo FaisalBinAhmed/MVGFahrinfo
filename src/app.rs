@@ -95,6 +95,7 @@ impl App {
                 // we don't update the departures if the api call returns an error variant
                 self.departures = departures;
                 self.update_last_refreshed();
+                self.should_redraw = true;
             }
         }
     }

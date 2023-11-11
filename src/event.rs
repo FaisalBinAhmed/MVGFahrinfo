@@ -1,10 +1,6 @@
 use anyhow::Result;
 use crossterm::event::{self, Event as CrosstermEvent, KeyEvent};
-use std::{
-    sync::mpsc,
-    thread,
-    time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 
 /// reference: https://ratatui.rs/tutorial/counter-app/event.html
 
@@ -16,18 +12,17 @@ pub enum Event {
 
 #[derive(Debug)]
 pub struct EventHandler {
-    pub sender: mpsc::Sender<Event>,
-    receiver: mpsc::Receiver<Event>,
-    handler: thread::JoinHandle<()>,
+    pub sender: tokio::sync::mpsc::UnboundedSender<Event>,
+    receiver: tokio::sync::mpsc::UnboundedReceiver<Event>,
 }
 
 impl EventHandler {
     pub fn new(tick_rate: u64) -> Self {
         let tick_rate = Duration::from_millis(tick_rate);
-        let (sender, receiver) = mpsc::channel();
-        let handler = {
+        let (sender, receiver) = tokio::sync::mpsc::unbounded_channel();
+        let _handler = {
             let sender = sender.clone();
-            thread::spawn(move || {
+            tokio::spawn(async move {
                 let mut last_tick = Instant::now();
                 loop {
                     let timeout = tick_rate
@@ -58,14 +53,13 @@ impl EventHandler {
                 }
             })
         };
-        Self {
-            sender,
-            receiver,
-            handler,
-        }
+        Self { sender, receiver }
     }
 
-    pub fn next(&self) -> Result<Event> {
-        Ok(self.receiver.recv()?)
+    pub async fn next(&mut self) -> Result<Event> {
+        self.receiver
+            .recv()
+            .await
+            .ok_or_else(|| anyhow::anyhow!("failed to receive event from event handler"))
     }
 }
