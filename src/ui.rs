@@ -28,7 +28,6 @@ pub fn render(app: &mut App, f: &mut Frame) {
     let block = Block::default();
     f.render_widget(block, size);
 
-    // let tab_names = ["Departures", "Station List"];
     let titles = ["Departures", "Station List"]
         .iter()
         .map(|t| {
@@ -108,7 +107,6 @@ pub fn render(app: &mut App, f: &mut Frame) {
             .block(Block::default().borders(Borders::ALL).title(popup_title))
             .style(Style::default().fg(Color::LightCyan))
             .alignment(ratatui::prelude::Alignment::Left);
-        // .block(block);
 
         let area = static_widgets::centered_rect(69, 50, f.size()); //size of the MODAL
 
@@ -137,7 +135,6 @@ pub fn render(app: &mut App, f: &mut Frame) {
         );
 
         f.render_stateful_widget(suggested_stations, chunks[1], search_scroll_state);
-        // f.render_widget(suggested_stations, chunks[1]);
     }
 }
 
@@ -153,7 +150,6 @@ fn draw_departures(f: &mut Frame<'_>, app: &App) {
         .padding(Padding::new(2, 2, 1, 1))
         .style(Style::default());
 
-    // let list = display_departures(&app.departures).block(block);
     let table = display_departures_table(&app.departures).block(block);
 
     let area = static_widgets::centered_rect(69, 50, f.size());

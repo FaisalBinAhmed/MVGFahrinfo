@@ -64,3 +64,7 @@ I might provide some pre-built binaries for Windows/MacOS/Linux in the future. :
 ## License
 
 MIT
+
+### Limitations
+
+Currently, the app only handles ASCII or 1 byte utf-8 character input. If you are searching a station with non-ascii characters in its name, the app will ignore the input. Please type the closeset characters & scroll a bit down to see the station in the list and select it (this will be fixed at a later version.)
