@@ -91,15 +91,10 @@ impl App {
 
     pub async fn update_departures(&mut self) {
         if let Some(station) = &self.selected_station {
-            self.departures = match api::get_departures(&station.id).await {
-                Ok(departures) => {
-                    self.update_last_refreshed();
-                    departures
-                }
-                Err(_e) => {
-                    // println!("Error fetching departures {}", e);
-                    vec![]
-                }
+            if let Ok(departures) = api::get_departures(&station.id).await {
+                // we don't update the departures if the api call returns an error variant
+                self.departures = departures;
+                self.update_last_refreshed();
             }
         }
     }
@@ -118,8 +113,6 @@ impl App {
         self.update_departures().await;
         self.selected_tab = AppTabs::HomeTab; // switch to home tab immidiatelyq
         self.should_redraw = true;
-        // self.auto_refresh = true;
-        // self.keep_refreshing_departures().await;
     }
 }
 
@@ -138,9 +131,11 @@ impl App {
     }
 
     pub fn enter_char(&mut self, new_char: char) {
-        self.query.insert(self.cursor_position, new_char);
-        self.move_cursor_right();
-
+        if new_char.len_utf8() == 1 {
+            // temporary workaround: ignoring non-ascii characters that are more than 1 byte
+            self.query.insert(self.cursor_position, new_char);
+            self.move_cursor_right();
+        }
         //should also commence the search
     }
 
@@ -163,7 +158,7 @@ impl App {
         }
     }
     pub fn clamp_cursor(&self, new_cursor_pos: usize) -> usize {
-        new_cursor_pos.clamp(0, self.query.len())
+        new_cursor_pos.clamp(0, self.query.chars().count())
     }
 
     pub fn reset_cursor(&mut self) {

@@ -244,8 +244,8 @@ pub fn get_suggested_station_list(app: &mut App) -> List {
         .filter(|station| {
             station
                 .name
-                .to_lowercase()
-                .contains(&app.query.to_lowercase())
+                .to_ascii_lowercase()
+                .contains(&app.query.to_ascii_lowercase())
         })
         .map(|station| {
             suggested_stations.push(station.clone());
