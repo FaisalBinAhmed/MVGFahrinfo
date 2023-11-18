@@ -67,4 +67,4 @@ MIT
 
 ### Limitations
 
-Currently, the app only handles ASCII or 1 byte UTF-8 character input. If you are searching a station with non-ascii characters (i.e. ö,ß etc.) in its name, the app will ignore the input. Please type the closest characters & scroll a bit down to select the station from the list (this will be fixed at a later version.)
+Currently, the app only handles ASCII or 1 byte UTF-8 character input. If you are searching a station with non-ASCII characters (i.e. "ö", "ß" etc.) in its name, the app will ignore the input. Please type the closest characters & scroll a bit down to select the station from the list (this will be fixed at a later version.)
