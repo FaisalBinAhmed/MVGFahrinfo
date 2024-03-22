@@ -1,10 +1,10 @@
 [package]
 name = "mvgfahrinfo"
 description = "Get up-to-date departure times for Munich public transport in your terminal."
-version = "1.1.0"
+version = "1.1.1"
 edition = "2021"
 
-author = "Faisal Ahmed"
+authors = ["Faisal Ahmed"]
 include = [
 	"src/**/*",
 	"Cargo.toml",
