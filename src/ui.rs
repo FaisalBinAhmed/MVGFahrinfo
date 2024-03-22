@@ -152,7 +152,7 @@ fn draw_departures(f: &mut Frame<'_>, app: &App) {
 
     let table = display_departures_table(&app.departures).block(block);
 
-    let area = static_widgets::centered_rect(69, 50, f.size());
+    let area = static_widgets::centered_rect(80, 69, f.size());
     f.render_widget(Clear, area); //this clears out the background
     f.render_widget(table, area);
 }
