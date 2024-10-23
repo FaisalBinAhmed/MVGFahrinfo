@@ -25,7 +25,7 @@ pub struct StationInfo {
 }
 
 pub async fn fetch_station_info(id: &str) -> Result<Vec<StationInfo>> {
-    let full_url = format!("https://www.mvg.de/api/fib/v2/location?query={}", id);
+    let full_url = format!("https://www.mvg.de/api/bgw-pt/v3/departures?globalId={}", id);
 
     let resp = reqwest::get(full_url)
         .await?
@@ -59,7 +59,7 @@ pub struct DepartureInfo {
 }
 
 pub async fn get_departures(id: &str) -> Result<Vec<DepartureInfo>> {
-    let full_url = format!("https://www.mvg.de/api/fib/v2/departure?globalId={}", id);
+    let full_url = format!("https://www.mvg.de/api/bgw-pt/v3/departures?globalId={}", id);
 
     let resp = reqwest::get(full_url)
         .await?
