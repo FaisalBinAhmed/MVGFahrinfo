@@ -3,13 +3,6 @@ use std::fs::File;
 // #[allow(unused, dead_code, unused_)]
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-pub async fn fetch_station_ids() -> Result<Vec<String>> {
-    let full_url = "https://www.mvg.de/.rest/zdm/mvgStationGlobalIds";
-
-    let stations = reqwest::get(full_url).await?.json::<Vec<String>>().await?;
-    // println!("{:#?}", stations);
-    Ok(stations)
-}
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")] //to avoid renaming all the fields to snake_case
@@ -22,18 +15,6 @@ pub struct StationInfo {
     pub post_code: String,
     pub street: String,
     pub r#type: String, //type is a reserved keyword in Rust
-}
-
-pub async fn fetch_station_info(id: &str) -> Result<Vec<StationInfo>> {
-    let full_url = format!("https://www.mvg.de/api/bgw-pt/v3/departures?globalId={}", id);
-
-    let resp = reqwest::get(full_url)
-        .await?
-        .json::<Vec<StationInfo>>()
-        .await?;
-    // println!("{:#?}", resp);
-    // return Ok(resp[0].clone());
-    Ok(resp)
 }
 
 #[derive(Debug, Deserialize, Clone)]
